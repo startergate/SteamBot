@@ -34,15 +34,15 @@ async def on_message(message):
     elif msg[0] == "st!game":
         if len(msg) == 1:
             await app.send_message(message.channel, "Use more specified message.")
-        if msg[1] == 'recent':
+        elif msg[1] == 'recent':
             if len(msg) == 3:
                 steamid = get_steam_id(msg[2])
                 recents = requests.get('http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&format=json')
                 recents = recents.json()
                 print(recents)
-                em = discord.Embed(title='Here\'s your recent played game list, ' + message.author.name + '!', description='And again, Thanks for Using!')
+                em = discord.Embed(title='Here\'s your recent played game list, ' + message.author.name + '!', description='And again, Thanks for Using!\nYou played ' + str(recents['response']['total_count']) + ' games in last 2 weeks.')
                 for text in recents['response']['games']:
-                    em.add_field(name=text['name'] + '(' + str(text['appid']) + ')', value='Played for ' + str("%.2f" % (text['playtime_2weeks'] / 60)) + ' hours in 2 week\nPlayed for ' + str("%.2f" % (text['playtime_forever'] / 60)) + ' hours in your lifetime', inline=False)
+                    em.add_field(name=text['name'] + ' (' + str(text['appid']) + ')', value='Played for ' + str("%.2f" % (text['playtime_2weeks'] / 60)) + ' hours in last 2 weeks\nPlayed for ' + str("%.2f" % (text['playtime_forever'] / 60)) + ' hours in your lifetime', inline=False)
 
                 await app.send_message(message.channel, embed=em)
             else:
