@@ -64,7 +64,7 @@ async def on_message(message):
                 price = product.find('div', class_='search_price').getText().strip();
                 temp = price.split('₩')
                 if len(temp) >= 3:
-                    price = '₩ ' + temp[1] + ' -> ' + '₩ ' + temp[2]
+                    price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
                 output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
             em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
