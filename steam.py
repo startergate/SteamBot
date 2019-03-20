@@ -64,7 +64,6 @@ async def on_message(message):
                 price = product.find('div', class_='search_price').getText().strip();
                 temp = price.split('₩')
                 if len(temp) >= 3:
-                    print(price.split('₩')[0], price.split('₩')[1], price.split('₩')[2]);
                     price = '₩ ' + temp[1] + ' -> ' + '₩ ' + temp[2]
                 output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
