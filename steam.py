@@ -55,20 +55,41 @@ async def on_message(message):
             else:
                 await app.send_message(message.channel, "ID를 입력해주세요.")
         elif msg[1] == 'bestseller':
-            bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
-            bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
-            bst_seller = bestseller_src.find_all('a', class_='search_result_row')
+            if len(msg) == 2:
+                bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
+                bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
+                bst_seller = bestseller_src.find_all('a', class_='search_result_row')
 
-            output_text = '스팀의 최고 판매 제품 목록입니다!'
-            for product in bst_seller:
-                price = product.find('div', class_='search_price').getText().strip();
-                temp = price.split('₩')
-                if len(temp) >= 3:
-                    price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
-                output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
+                output_text = '스팀의 최고 판매 제품 목록입니다!'
+                for product in bst_seller:
+                    price = product.find('div', class_='search_price').getText().strip();
+                    temp = price.split('₩')
+                    if len(temp) >= 3:
+                        price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
+                    output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
-            em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
-            await app.send_message(message.channel, embed=em)
+                em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
+                await app.send_message(message.channel, embed=em)
+            elif msg[2] == 'new':
+                bestseller_src = requests.get('https://store.steampowered.com/explore/new/')
+                bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
+                bst_seller = bestseller_src.find('div', id='tab_newreleases_content')
+                bst_seller = bst_seller.find_all('a', class_='tab_item')
+
+                print(bst_seller)
+                output_text = '스팀의 신제품 최고 판매 제품 목록입니다!'
+                skip = 1
+                for product in bst_seller:
+                    if skip:
+                        skip = 0
+                        continue
+                    price = product.find('div', class_='discount_final_price').getText().strip()
+                    if product.find('div', class_='discount_original_price'):
+                        price += ' ~~' + product.find('div', class_='discount_original_price').getText().strip() + '~~'
+                    output_text += '\n' + product.find('div', class_='tab_item_name').getText() + '  |  ' + price
+
+                em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
+                await app.send_message(message.channel, embed=em)
 
 
 
