@@ -15,7 +15,7 @@ async def on_ready():
     print(app.user.id)
     print("=============")
 
-    await app.change_presence(game=discord.Game(name="st!help to get help", type=1))
+    await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
 
 
 @app.event
@@ -27,6 +27,7 @@ async def on_message(message):
         em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!')
         em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 도움!을 외쳐주세요!', inline=False)
         em.add_field(name='st!game bestseller', value='스팀 최고 인기 제품 상위 25개를 가져옵니다.', inline=False)
+        em.add_field(name='st!game bestseller [ new, oncoming ]', value='스팀 인기 제품을 가져옵니다. 각각 신제품, 출시 예정 제품입니다.', inline=False)
         em.add_field(name='st!game recent (Player)', value='유저가 최근 2주간 플레이한 게임을 가져옵니다.', inline=False)
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
@@ -89,7 +90,28 @@ async def on_message(message):
 
                 em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
                 await app.send_message(message.channel, embed=em)
+            elif msg[2] == 'oncoming':
+                bestseller_src = requests.get('https://store.steampowered.com/explore/upcoming/')
+                bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
+                bst_seller = bestseller_src.find('div', id='tab_popular_comingsoon_content')
+                bst_seller = bst_seller.find_all('a', class_='tab_item')
 
+                output_text = '스팀의 인기순 출시 예정 목록입니다!'
+                previous_title = ''
+                for product in bst_seller:
+                    if previous_title == product.find('div', class_='tab_item_name').getText():
+                        continue
+                    previous_title = product.find('div', class_='tab_item_name').getText()
+                    price = ''
+                    if product.find('div', class_='discount_final_price'):
+                        price = ' | '
+                        price += product.find('div', class_='discount_final_price').getText().strip()
+                        if product.find('div', class_='discount_original_price'):
+                            price += ' ~~' + product.find('div', class_='discount_original_price').getText().strip() + '~~'
+                    output_text += '\n' + product.find('div', class_='tab_item_name').getText() + price
+
+                em = discord.Embed(title='스팀 최고 인기 출시 예정 제품', description=output_text)
+                await app.send_message(message.channel, embed=em)
 
 
 def get_steam_id(name):
