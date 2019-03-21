@@ -76,17 +76,16 @@ async def on_message(message):
                 bst_seller = bestseller_src.find('div', id='tab_newreleases_content')
                 bst_seller = bst_seller.find_all('a', class_='tab_item')
 
-                print(bst_seller)
                 output_text = '스팀의 신제품 최고 판매 제품 목록입니다!'
-                skip = 1
+                previous_title = ''
                 for product in bst_seller:
-                    if skip:
-                        skip = 0
+                    if previous_title == product.find('div', class_='tab_item_name').getText():
                         continue
+                    previous_title = product.find('div', class_='tab_item_name').getText()
                     price = product.find('div', class_='discount_final_price').getText().strip()
                     if product.find('div', class_='discount_original_price'):
                         price += ' ~~' + product.find('div', class_='discount_original_price').getText().strip() + '~~'
-                    output_text += '\n' + product.find('div', class_='tab_item_name').getText() + '  |  ' + price
+                    output_text += '\n' + product.find('div', class_='tab_item_name').getText() + ' | ' + price
 
                 em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
                 await app.send_message(message.channel, embed=em)
