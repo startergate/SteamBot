@@ -112,6 +112,24 @@ async def on_message(message):
 
                 em = discord.Embed(title='스팀 최고 인기 출시 예정 제품', description=output_text)
                 await app.send_message(message.channel, embed=em)
+        elif msg[1] == 'new':
+            new_src = requests.get('https://store.steampowered.com/search/?sort_by=Released_DESC')
+            new_src = BeautifulSoup(new_src.text, 'html.parser')
+            new_prd = new_src.find_all('a', class_='search_result_row')
+
+            output_text = '스팀의 최신 출시 제품 목록입니다!'
+            for product in new_prd:
+                if product.find('div', class_='search_price').getText().strip() != '':
+                    price = product.find('div', class_='search_price').getText().strip();
+                    temp = price.split('₩')
+                    if len(temp) >= 3:
+                        price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
+                else:
+                    price = "기록 없음"
+                output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
+
+            em = discord.Embed(title='스팀 최신 출시 제품', description=output_text)
+            await app.send_message(message.channel, embed=em)
 
 
 def get_steam_id(name):
