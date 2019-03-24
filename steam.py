@@ -26,6 +26,8 @@ async def on_message(message):
     if msg[0] == "st!help":
         em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!')
         em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 도움!을 외쳐주세요!', inline=False)
+        em.add_field(name='st!game new', value='스팀 최근 출시 제품들을 가져옵니다.', inline=False)
+        em.add_field(name='st!game specials', value='스팀 인기 할인 제품들을 가져옵니다.', inline=False)
         em.add_field(name='st!game bestseller', value='스팀 최고 인기 제품 상위 25개를 가져옵니다.', inline=False)
         em.add_field(name='st!game bestseller [ new, oncoming ]', value='스팀 인기 제품을 가져옵니다. 각각 신제품, 출시 예정 제품입니다.', inline=False)
         em.add_field(name='st!game recent (Player)', value='유저가 최근 2주간 플레이한 게임을 가져옵니다.', inline=False)
@@ -129,6 +131,24 @@ async def on_message(message):
                 output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
             em = discord.Embed(title='스팀 최신 출시 제품', description=output_text)
+            await app.send_message(message.channel, embed=em)
+        elif msg[1] == 'specials':
+            new_src = requests.get('https://store.steampowered.com/search/?specials=1')
+            new_src = BeautifulSoup(new_src.text, 'html.parser')
+            new_prd = new_src.find_all('a', class_='search_result_row')
+
+            output_text = '스팀의 인기 할인 제품 목록입니다!'
+            for product in new_prd:
+                if product.find('div', class_='search_price').getText().strip() != '':
+                    price = product.find('div', class_='search_price').getText().strip();
+                    temp = price.split('₩')
+                    if len(temp) >= 3:
+                        price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
+                else:
+                    price = "기록 없음"
+                output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
+
+            em = discord.Embed(title='스팀 인기 할인 제품', description=output_text)
             await app.send_message(message.channel, embed=em)
 
 
