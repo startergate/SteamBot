@@ -26,7 +26,8 @@ async def on_message(message):
     msg = message.content.split(' ')
     if msg[0] == "st!help":
         em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!')
-        em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 도움!을 외쳐주세요!', inline=False)
+        em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 「도움!」을 외쳐주세요!', inline=False)
+        em.add_field(name='st!profile [ username ]', value='유저의 프로필을 가져옵니다!', inline=False)
         em.add_field(name='st!game new', value='스팀 최근 출시 제품들을 가져옵니다.', inline=False)
         em.add_field(name='st!game specials', value='스팀 인기 할인 제품들을 가져옵니다.', inline=False)
         em.add_field(name='st!game bestseller', value='스팀 최고 인기 제품 상위 25개를 가져옵니다.', inline=False)
@@ -35,6 +36,16 @@ async def on_message(message):
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
             await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 작동합니다.")
+    elif msg[0] == "st!profile":
+        print(len(msg))
+        if len(msg) == 1:
+            await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
+            return
+        xmls = get_steam_id(msg[1], True)
+        em = discord.Embed(title=xmls.find('steamID').text + ' | ' + xmls.find('stateMessage').text, description=xmls.find('summary').text.replace('<br>', '\n')).set_thumbnail(url=xmls.find('avatarIcon').text)
+        #em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 「도움!」을 외쳐주세요!', inline=False)
+
+        await app.send_message(message.channel, embed=em)
     elif msg[0] == "st!game":
         if len(msg) == 1:
             await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
@@ -49,7 +60,7 @@ async def on_message(message):
                 if recents['response']['total_count'] == 0:
                     await app.send_message(message.channel, '어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
                     return
-                em = discord.Embed(title='최근에 플레이하신 게임 목록입니다, ' + message.author.name + ' 님!', description='그리고, 사용해주셔서 감사합니다!\n지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨습니다.')
+                em = discord.Embed(title=msg[2] + '님이 최근에 플레이하신 게임 목록입니다.', description='지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이했습니다.')
                 total_time = 0;
                 for text in recents['response']['games']:
                     total_time += text['playtime_2weeks'];
@@ -155,15 +166,18 @@ async def on_message(message):
             await app.send_message(message.channel, embed=em)
 
 
-def get_steam_id(name):
+def get_steam_id(name, wantAll = False):
     if isNumber(name) and len(name) > 17:
         return name
-    xmls = requests.get('https://steamcommunity.com/id/' + name + '/?xml=1').text.replace('\r', '').replace('\t', '').replace('\n', '').replace('\'', '')
+    xmls = requests.get('https://steamcommunity.com/id/' + name + '/?xml=1').text
     xmls = et.fromstring(xmls)
-    if xmls.find('error'):
+    try:
+        xmls.find('error').text
         return 0
-
-    return xmls.find('steamID64').text
+    except AttributeError:
+        if wantAll:
+            return xmls
+        return xmls.find('steamID64').text
 
 
 def isNumber(s):
