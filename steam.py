@@ -37,7 +37,6 @@ async def on_message(message):
         if len(msg) > 1:
             await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 작동합니다.")
     elif msg[0] == "st!profile":
-        print(len(msg))
         if len(msg) == 1:
             await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
             return
