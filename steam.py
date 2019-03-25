@@ -2,6 +2,7 @@ import asyncio
 import discord
 import requests
 from bs4 import BeautifulSoup;
+import xml.etree.ElementTree as et
 
 app = discord.Client()
 
@@ -48,7 +49,7 @@ async def on_message(message):
                 if recents['response']['total_count'] == 0:
                     await app.send_message(message.channel, '어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
                     return
-                em = discord.Embed(title='최근에 플레이하신 게임 목록입니다,, ' + message.author.name + ' 님!', description='그리고, 사용해주셔서 감사합니다!\n지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨습니다..')
+                em = discord.Embed(title='최근에 플레이하신 게임 목록입니다, ' + message.author.name + ' 님!', description='그리고, 사용해주셔서 감사합니다!\n지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨습니다.')
                 total_time = 0;
                 for text in recents['response']['games']:
                     total_time += text['playtime_2weeks'];
@@ -78,14 +79,16 @@ async def on_message(message):
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
                 bst_seller = bestseller_src.find('div', id='tab_newreleases_content')
                 bst_seller = bst_seller.find_all('a', class_='tab_item')
-
                 output_text = '스팀의 신제품 최고 판매 제품 목록입니다!'
                 previous_title = ''
                 for product in bst_seller:
                     if previous_title == product.find('div', class_='tab_item_name').getText():
                         continue
                     previous_title = product.find('div', class_='tab_item_name').getText()
-                    price = product.find('div', class_='discount_final_price').getText().strip()
+                    if(product.find('div', class_='discount_final_price')):
+                        price = product.find('div', class_='discount_final_price').getText().strip()
+                    else:
+                        price = '기록 없음'
                     if product.find('div', class_='discount_original_price'):
                         price += ' ~~' + product.find('div', class_='discount_original_price').getText().strip() + '~~'
                     output_text += '\n' + product.find('div', class_='tab_item_name').getText() + ' | ' + price
@@ -155,12 +158,12 @@ async def on_message(message):
 def get_steam_id(name):
     if isNumber(name) and len(name) > 17:
         return name
-    jsons = requests.get('https://api.steamid.uk/request.php?api=9295K4J61YKD3357E6WA&player=' + name +'&request_type=5&format=json')
-    jsons = jsons.json()
-    if hasattr(jsons, 'error'):
+    xmls = requests.get('https://steamcommunity.com/id/' + name + '/?xml=1').text.replace('\r', '').replace('\t', '').replace('\n', '').replace('\'', '')
+    xmls = et.fromstring(xmls)
+    if xmls.find('error'):
         return 0
 
-    return jsons['linked_users']['steamid64']
+    return xmls.find('steamID64').text
 
 
 def isNumber(s):
