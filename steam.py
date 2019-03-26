@@ -49,7 +49,9 @@ async def on_message(message):
         if len(msg) == 1:
             await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
         elif msg[1] == 'recent':
-            if len(msg) == 3:
+            if len(msg) == 2:
+                await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
+            elif len(msg) == 3:
                 steamid = get_steam_id(msg[2])
                 if steamid == 0:
                     await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
@@ -68,6 +70,13 @@ async def on_message(message):
                 await app.send_message(message.channel, embed=em)
             else:
                 await app.send_message(message.channel, "ID를 입력해주세요.")
+        elif msg[1] == 'library':
+            if len(msg) == 1:
+                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
+            else:
+                userlib = requests.get('https://steamcommunity.com/id/startergate/games/?tab=all&sort=playtime')
+                userlib = BeautifulSoup(userlib.text, 'html.parser')
+                user_game_list = userlib.find_all('div', class_='')
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
