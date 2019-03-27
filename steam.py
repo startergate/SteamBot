@@ -70,30 +70,6 @@ async def on_message(message):
                 await app.send_message(message.channel, embed=em)
             else:
                 await app.send_message(message.channel, "ID를 입력해주세요.")
-        '''elif msg[1] == 'library':
-            if len(msg) == 1:
-                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
-            else:
-                userlib = requests.get('https://steamcommunity.com/id/' + msg[2] + '/games/?tab=all&sort=playtime')
-                userlib = BeautifulSoup(userlib.text, 'html.parser')
-                user_game_list = userlib.find_all('div', id='games_list_rows')
-                print(len(msg))
-                if len(msg) > 3:
-                    requested_length = int(msg[3])
-                else:
-                    requested_length = 10
-                i = 0;
-                em = discord.Embed(title=msg[2] + '님의 라이브러리에요.', description='플레이시간 상위 '+ str(requested_length) + '개를 불러왔어요.')
-                print(userlib)
-                for game in user_game_list:
-                    if i == requested_length:
-                        print(i)
-                        break
-                    gameimg = game.find('img').tag['src']
-                    em.add_field(name=game.find('div', class_='gameListRowItemName'), value=game.find('h5', class_='hours_played')).set_image(gameimg)
-                    i += 1
-                await app.send_message(message.channel, embed=em)'''
-        #api 써야됨
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
