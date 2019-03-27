@@ -27,15 +27,15 @@ async def on_message(message):
     if msg[0] == "st!help":
         em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!')
         em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 「도움!」을 외쳐주세요!', inline=False)
-        em.add_field(name='st!profile [ username ]', value='유저의 프로필을 가져옵니다!', inline=False)
-        em.add_field(name='st!game new', value='스팀 최근 출시 제품들을 가져옵니다.', inline=False)
-        em.add_field(name='st!game specials', value='스팀 인기 할인 제품들을 가져옵니다.', inline=False)
-        em.add_field(name='st!game bestseller', value='스팀 최고 인기 제품 상위 25개를 가져옵니다.', inline=False)
-        em.add_field(name='st!game bestseller [ new, oncoming ]', value='스팀 인기 제품을 가져옵니다. 각각 신제품, 출시 예정 제품입니다.', inline=False)
-        em.add_field(name='st!game recent (Player)', value='유저가 최근 2주간 플레이한 게임을 가져옵니다.', inline=False)
+        em.add_field(name='st!profile [ username ]', value='유저의 프로필을 가져와요.', inline=False)
+        em.add_field(name='st!game new', value='스팀 최근 출시 제품들을 가져와요.', inline=False)
+        em.add_field(name='st!game specials', value='스팀 인기 할인 제품들을 가져와요.', inline=False)
+        em.add_field(name='st!game bestseller', value='스팀 최고 인기 제품 상위 25개를 가져와요.', inline=False)
+        em.add_field(name='st!game bestseller [ new, oncoming ]', value='스팀 인기 제품을 가져와요. 각각 신제품, 출시 예정 제품입니다.', inline=False)
+        em.add_field(name='st!game recent (Player)', value='유저가 최근 2주간 플레이한 게임을 가져와요.', inline=False)
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
-            await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 작동합니다.")
+            await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 쓸 수 있어요!")
     elif msg[0] == "st!profile":
         if len(msg) == 1:
             await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
@@ -61,29 +61,46 @@ async def on_message(message):
                 if recents['response']['total_count'] == 0:
                     await app.send_message(message.channel, '어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
                     return
-                em = discord.Embed(title=msg[2] + '님이 최근에 플레이하신 게임 목록입니다.', description='지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이했습니다.')
+                em = discord.Embed(title=msg[2] + '님이 최근에 플레이하신 게임 목록이에요.', description='지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨어요.')
                 total_time = 0;
                 for text in recents['response']['games']:
                     total_time += text['playtime_2weeks'];
-                    em.add_field(name=text['name'] + ' (' + str(text['appid']) + ')', value='지난 2주간 ' + str("%.2f" % (text['playtime_2weeks'] / 60)) + ' 시간동안 플레이함\n평생 동안 ' + str("%.2f" % (text['playtime_forever'] / 60)) + ' 시간동안 플레이함', inline=False)
-                em.add_field(name='총 플레이 시간', value=msg[2] + '님은 지난 2주간 ' + str("%.2f" % (total_time / 60)) + '시간동안 플레이하셨습니다!')
+                    em.add_field(name=text['name'] + ' (' + str(text['appid']) + ')', value='지난 2주간 ' + str("%.2f" % (text['playtime_2weeks'] / 60)) + ' 시간동안 플레이 함\n평생 동안 ' + str("%.2f" % (text['playtime_forever'] / 60)) + ' 시간동안 플레이 함', inline=False)
+                em.add_field(name='총 플레이 시간', value=msg[2] + '님은 지난 2주간 ' + str("%.2f" % (total_time / 60)) + '시간동안 플레이하셨어요!')
                 await app.send_message(message.channel, embed=em)
             else:
                 await app.send_message(message.channel, "ID를 입력해주세요.")
-        elif msg[1] == 'library':
+        '''elif msg[1] == 'library':
             if len(msg) == 1:
                 await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
             else:
-                userlib = requests.get('https://steamcommunity.com/id/startergate/games/?tab=all&sort=playtime')
+                userlib = requests.get('https://steamcommunity.com/id/' + msg[2] + '/games/?tab=all&sort=playtime')
                 userlib = BeautifulSoup(userlib.text, 'html.parser')
-                user_game_list = userlib.find_all('div', class_='')
+                user_game_list = userlib.find_all('div', id='games_list_rows')
+                print(len(msg))
+                if len(msg) > 3:
+                    requested_length = int(msg[3])
+                else:
+                    requested_length = 10
+                i = 0;
+                em = discord.Embed(title=msg[2] + '님의 라이브러리에요.', description='플레이시간 상위 '+ str(requested_length) + '개를 불러왔어요.')
+                print(userlib)
+                for game in user_game_list:
+                    if i == requested_length:
+                        print(i)
+                        break
+                    gameimg = game.find('img').tag['src']
+                    em.add_field(name=game.find('div', class_='gameListRowItemName'), value=game.find('h5', class_='hours_played')).set_image(gameimg)
+                    i += 1
+                await app.send_message(message.channel, embed=em)'''
+        #api 써야됨
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
                 bst_seller = bestseller_src.find_all('a', class_='search_result_row')
 
-                output_text = '스팀의 최고 판매 제품 목록입니다!'
+                output_text = '스팀의 최고 판매 제품 목록이에요.'
                 for product in bst_seller:
                     price = product.find('div', class_='search_price').getText().strip();
                     temp = price.split('₩')
@@ -98,7 +115,7 @@ async def on_message(message):
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
                 bst_seller = bestseller_src.find('div', id='tab_newreleases_content')
                 bst_seller = bst_seller.find_all('a', class_='tab_item')
-                output_text = '스팀의 신제품 최고 판매 제품 목록입니다!'
+                output_text = '스팀의 신제품 최고 판매 제품 목록이에요.'
                 previous_title = ''
                 for product in bst_seller:
                     if previous_title == product.find('div', class_='tab_item_name').getText():
@@ -120,7 +137,7 @@ async def on_message(message):
                 bst_seller = bestseller_src.find('div', id='tab_popular_comingsoon_content')
                 bst_seller = bst_seller.find_all('a', class_='tab_item')
 
-                output_text = '스팀의 인기순 출시 예정 목록입니다!'
+                output_text = '스팀의 인기순 출시 예정 목록이에요.'
                 previous_title = ''
                 for product in bst_seller:
                     if previous_title == product.find('div', class_='tab_item_name').getText():
@@ -141,7 +158,7 @@ async def on_message(message):
             new_src = BeautifulSoup(new_src.text, 'html.parser')
             new_prd = new_src.find_all('a', class_='search_result_row')
 
-            output_text = '스팀의 최신 출시 제품 목록입니다!'
+            output_text = '스팀의 최신 출시 제품 목록이에요.'
             for product in new_prd:
                 if product.find('div', class_='search_price').getText().strip() != '':
                     price = product.find('div', class_='search_price').getText().strip();
@@ -159,7 +176,7 @@ async def on_message(message):
             new_src = BeautifulSoup(new_src.text, 'html.parser')
             new_prd = new_src.find_all('a', class_='search_result_row')
 
-            output_text = '스팀의 인기 할인 제품 목록입니다!'
+            output_text = '스팀의 인기 할인 제품 목록이에요.'
             for product in new_prd:
                 if product.find('div', class_='search_price').getText().strip() != '':
                     price = product.find('div', class_='search_price').getText().strip();
@@ -174,7 +191,7 @@ async def on_message(message):
             await app.send_message(message.channel, embed=em)
 
 
-def get_steam_id(name, wantAll = False):
+def get_steam_id(name, want_all=False):
     if isNumber(name) and len(name) > 17:
         return name
     xmls = requests.get('https://steamcommunity.com/id/' + name + '/?xml=1').text
@@ -183,7 +200,7 @@ def get_steam_id(name, wantAll = False):
         xmls.find('error').text
         return 0
     except AttributeError:
-        if wantAll:
+        if want_all:
             return xmls
         return xmls.find('steamID64').text
 
@@ -194,5 +211,6 @@ def isNumber(s):
         return True
     except ValueError:
         return False
+
 
 app.run(token)
