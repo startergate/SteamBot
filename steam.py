@@ -89,38 +89,32 @@ async def on_message(message):
                 if steamid == 0:
                     await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
                     return
-                userlib = requests.get('http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&format=json')
+                userlib = requests.get('http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&include_appinfo=1&format=json')
                 userlib = userlib.json()
                 games = userlib['response']['games']
                 games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
-                print(games)
-                print(len(msg))
                 if len(msg) > 3:
                     requested_length = int(msg[3])
                 else:
                     requested_length = 10
                 if len(games) < requested_length:
                     requested_length = len(games)
-                i = 0;
+                if requested_length > 25:
+                    requested_length = 25
+                i = 0
                 em = discord.Embed(title='{} 님의 라이브러리에요.'.format(msg[2]),
                                    description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False)
                 for game in games:
                     if i == requested_length:
-                        print(i)
                         break
-                    # gameimg = game.find('img').tag['src']
                     playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
-                    print('playtime_2weeks' in game)
                     if 'playtime_2weeks' in game:
                         playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
 
-                    gamename = 'test'
-                    em.add_field(name='{} ({})'.format(gamename, game['appid']),
-                                 value=playtime, inline=False)#.set_image(gameimg)
+                    em.add_field(name='{} ({})'.format(game['name'], game['appid']),
+                                 value=playtime, inline=False)
                     i += 1
                 await app.send_message(message.channel, embed=em)
-
-                #api 써야됨
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
