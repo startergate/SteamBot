@@ -32,7 +32,9 @@ async def on_message(message):
         em.add_field(name='st!game specials', value='스팀 인기 할인 제품들을 가져와요.', inline=False)
         em.add_field(name='st!game bestseller', value='스팀 최고 인기 제품 상위 25개를 가져와요.', inline=False)
         em.add_field(name='st!game bestseller [ new, oncoming ]', value='스팀 인기 제품을 가져와요. 각각 신제품, 출시 예정 제품입니다.', inline=False)
-        em.add_field(name='st!game recent (Player)', value='유저가 최근 2주간 플레이한 게임을 가져와요.', inline=False)
+        em.add_field(name='st!game recent [ username ]', value='유저가 최근 2주간 플레이한 게임을 가져와요.', inline=False)
+        em.add_field(name='st!game library [ username ]', value='유저의 라이브러리를 10개 가져와요.', inline=False)
+        em.add_field(name='st!game library [ username ] [ count ]', value='유저의 라이브러리를 입력한 만큼 가져와요.', inline=False)
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
             await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 쓸 수 있어요!")
@@ -41,9 +43,18 @@ async def on_message(message):
             await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
             return
         xmls = get_steam_id(msg[1], True)
-        em = discord.Embed(title=xmls.find('steamID').text + ' | ' + xmls.find('stateMessage').text, description=xmls.find('summary').text.replace('<br>', '\n')).set_thumbnail(url=xmls.find('avatarIcon').text)
-        #em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 「도움!」을 외쳐주세요!', inline=False)
-
+        if xmls == 0:
+            await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
+            return
+        statusColor = ''
+        if xmls.find('onlineState').text == 'in-game':
+            statusColor = discord.Colour(0x90ba3c)
+        elif xmls.find('onlineState').text == 'online':
+            statusColor = discord.Colour(0x57cbde)
+        elif xmls.find('onlineState').text == 'offline':
+            statusColor = discord.Colour(0x898989)
+        em = discord.Embed(title=xmls.find('steamID').text, description=xmls.find('stateMessage').text.replace('<br/>', ': '), colour=statusColor).set_thumbnail(url=xmls.find('avatarIcon').text)
+        em.add_field(name='요약', value=xmls.find('summary').text.replace('<br>', '\n'), inline=False)
         await app.send_message(message.channel, embed=em)
     elif msg[0] == "st!game":
         if len(msg) == 1:
@@ -70,6 +81,46 @@ async def on_message(message):
                 await app.send_message(message.channel, embed=em)
             else:
                 await app.send_message(message.channel, "ID를 입력해주세요.")
+        elif msg[1] == 'library':
+            if len(msg) == 1:
+                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
+            else:
+                steamid = get_steam_id(msg[2])
+                if steamid == 0:
+                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
+                    return
+                userlib = requests.get('http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&format=json')
+                userlib = userlib.json()
+                games = userlib['response']['games']
+                games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
+                print(games)
+                print(len(msg))
+                if len(msg) > 3:
+                    requested_length = int(msg[3])
+                else:
+                    requested_length = 10
+                if len(games) < requested_length:
+                    requested_length = len(games)
+                i = 0;
+                em = discord.Embed(title='{} 님의 라이브러리에요.'.format(msg[2]),
+                                   description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False)
+                for game in games:
+                    if i == requested_length:
+                        print(i)
+                        break
+                    # gameimg = game.find('img').tag['src']
+                    playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
+                    print('playtime_2weeks' in game)
+                    if 'playtime_2weeks' in game:
+                        playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
+
+                    gamename = 'test'
+                    em.add_field(name='{} ({})'.format(gamename, game['appid']),
+                                 value=playtime, inline=False)#.set_image(gameimg)
+                    i += 1
+                await app.send_message(message.channel, embed=em)
+
+                #api 써야됨
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
@@ -168,8 +219,6 @@ async def on_message(message):
 
 
 def get_steam_id(name, want_all=False):
-    if isNumber(name) and len(name) > 17:
-        return name
     xmls = requests.get('https://steamcommunity.com/id/' + name + '/?xml=1').text
     xmls = et.fromstring(xmls)
     try:
