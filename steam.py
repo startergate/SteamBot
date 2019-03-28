@@ -25,7 +25,7 @@ async def on_message(message):
         return None
     msg = message.content.split(' ')
     if msg[0] == "st!help":
-        em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!')
+        em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!', colour=discord.Colour(0x1b2838))
         em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 「도움!」을 외쳐주세요!', inline=False)
         em.add_field(name='st!profile [ username ]', value='유저의 프로필을 가져와요.', inline=False)
         em.add_field(name='st!game new', value='스팀 최근 출시 제품들을 가져와요.', inline=False)
@@ -34,7 +34,7 @@ async def on_message(message):
         em.add_field(name='st!game bestseller [ new, oncoming ]', value='스팀 인기 제품을 가져와요. 각각 신제품, 출시 예정 제품입니다.', inline=False)
         em.add_field(name='st!game recent [ username ]', value='유저가 최근 2주간 플레이한 게임을 가져와요.', inline=False)
         em.add_field(name='st!game library [ username ]', value='유저의 라이브러리를 10개 가져와요.', inline=False)
-        em.add_field(name='st!game library [ username ] [ count ]', value='유저의 라이브러리를 입력한 만큼 가져와요.', inline=False)
+        em.add_field(name='st!game library [ username ] [ count ]', value='유저의 라이브러리를 입력한 만큼 가져와요. (최대 25개)', inline=False)
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
             await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 쓸 수 있어요!")
@@ -46,7 +46,6 @@ async def on_message(message):
         if xmls == 0:
             await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
             return
-        statusColor = ''
         if xmls.find('onlineState').text == 'in-game':
             statusColor = discord.Colour(0x90ba3c)
         elif xmls.find('onlineState').text == 'online':
@@ -72,7 +71,7 @@ async def on_message(message):
                 if recents['response']['total_count'] == 0:
                     await app.send_message(message.channel, '어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
                     return
-                em = discord.Embed(title=msg[2] + '님이 최근에 플레이하신 게임 목록이에요.', description='지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨어요.')
+                em = discord.Embed(title=msg[2] + '님이 최근에 플레이하신 게임 목록이에요.', description='지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨어요.', colour=discord.Colour(0x1b2838))
                 total_time = 0;
                 for text in recents['response']['games']:
                     total_time += text['playtime_2weeks'];
@@ -94,7 +93,11 @@ async def on_message(message):
                 games = userlib['response']['games']
                 games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
                 if len(msg) > 3:
-                    requested_length = int(msg[3])
+                    try:
+                        requested_length = int(msg[3])
+                    except ValueError:
+                        await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
+                        return
                 else:
                     requested_length = 10
                 if len(games) < requested_length:
@@ -103,7 +106,7 @@ async def on_message(message):
                     requested_length = 25
                 i = 0
                 em = discord.Embed(title='{} 님의 라이브러리에요.'.format(msg[2]),
-                                   description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False)
+                                   description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False, colour=discord.Colour(0x1b2838))
                 for game in games:
                     if i == requested_length:
                         break
@@ -129,7 +132,7 @@ async def on_message(message):
                         price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
                     output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
-                em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
+                em = discord.Embed(title='스팀 최고 판매 제품', description=output_text, colour=discord.Colour(0x1b2838))
                 await app.send_message(message.channel, embed=em)
             elif msg[2] == 'new':
                 bestseller_src = requests.get('https://store.steampowered.com/explore/new/')
@@ -150,7 +153,7 @@ async def on_message(message):
                         price += ' ~~' + product.find('div', class_='discount_original_price').getText().strip() + '~~'
                     output_text += '\n' + product.find('div', class_='tab_item_name').getText() + ' | ' + price
 
-                em = discord.Embed(title='스팀 최고 판매 제품', description=output_text)
+                em = discord.Embed(title='스팀 최고 판매 제품', description=output_text, colour=discord.Colour(0x1b2838))
                 await app.send_message(message.channel, embed=em)
             elif msg[2] == 'oncoming':
                 bestseller_src = requests.get('https://store.steampowered.com/explore/upcoming/')
@@ -172,7 +175,7 @@ async def on_message(message):
                             price += ' ~~' + product.find('div', class_='discount_original_price').getText().strip() + '~~'
                     output_text += '\n' + product.find('div', class_='tab_item_name').getText() + price
 
-                em = discord.Embed(title='스팀 최고 인기 출시 예정 제품', description=output_text)
+                em = discord.Embed(title='스팀 최고 인기 출시 예정 제품', description=output_text, colour=discord.Colour(0x1b2838))
                 await app.send_message(message.channel, embed=em)
         elif msg[1] == 'new':
             new_src = requests.get('https://store.steampowered.com/search/?sort_by=Released_DESC')
@@ -190,7 +193,7 @@ async def on_message(message):
                     price = "기록 없음"
                 output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
-            em = discord.Embed(title='스팀 최신 출시 제품', description=output_text)
+            em = discord.Embed(title='스팀 최신 출시 제품', description=output_text, colour=discord.Colour(0x1b2838))
             await app.send_message(message.channel, embed=em)
         elif msg[1] == 'specials':
             new_src = requests.get('https://store.steampowered.com/search/?specials=1')
@@ -208,7 +211,7 @@ async def on_message(message):
                     price = "기록 없음"
                 output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
-            em = discord.Embed(title='스팀 인기 할인 제품', description=output_text)
+            em = discord.Embed(title='스팀 인기 할인 제품', description=output_text, colour=discord.Colour(0x1b2838))
             await app.send_message(message.channel, embed=em)
 
 
