@@ -118,6 +118,46 @@ async def on_message(message):
                                  value=playtime, inline=False)
                     i += 1
                 await app.send_message(message.channel, embed=em)
+        elif msg[1] == 'wishlist':
+            if len(msg) == 1:
+                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
+            else:
+                steamid = get_steam_id(msg[2])
+                if steamid == 0:
+                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
+                    return
+                userlib = requests.get(
+                    'https://store.steampowered.com/wishlist/profiles/' + staamid + '/wishlistdata/')
+                userlib = userlib.json()
+                games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
+                if len(msg) > 3:
+                    try:
+                        requested_length = int(msg[3])
+                    except ValueError:
+                        await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
+                        return
+                else:
+                    requested_length = 10
+                if len(games) < requested_length:
+                    requested_length = len(games)
+                if requested_length > 25:
+                    requested** _length = 25
+                i = 0
+                em = discord.Embed(title='{} 님의 라이브러리에요.'.format(msg[2]),
+                                   description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False,
+                                   colour=discord.Colour(0x1b2838))
+                for game in games:
+                    if i == requested_length:
+                        break
+                    playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
+                    if 'playtime_2weeks' in game:
+                        playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
+
+                    em.add_field(name='{} ({})'.format(game['name'], game['appid']),
+                                 value=playtime, inline=False)
+                    i += 1
+                await app.send_message(message.channel, embed=em)
+
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
