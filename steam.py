@@ -126,10 +126,8 @@ async def on_message(message):
                 if steamid == 0:
                     await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
                     return
-                userlib = requests.get(
-                    'https://store.steampowered.com/wishlist/profiles/' + staamid + '/wishlistdata/')
-                userlib = userlib.json()
-                games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
+                userwish = requests.get('https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/'.format(steamid))
+                userwish = userwish.json()
                 if len(msg) > 3:
                     try:
                         requested_length = int(msg[3])
@@ -138,24 +136,27 @@ async def on_message(message):
                         return
                 else:
                     requested_length = 10
-                if len(games) < requested_length:
-                    requested_length = len(games)
+                if len(userwish) < requested_length:
+                    requested_length = len(userwish)
                 if requested_length > 25:
-                    requested** _length = 25
+                    requested_length = 25
+                sortedNumbers = sorted(userwish, key=lambda wish: userwish[wish]['rank'])
+                print(len(userwish))
                 i = 0
-                em = discord.Embed(title='{} 님의 라이브러리에요.'.format(msg[2]),
-                                   description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False,
-                                   colour=discord.Colour(0x1b2838))
-                for game in games:
+                output = '찜 목록에 있는 게임 {}개를 불러왔어요.\n'.format(requested_length)
+                for num in sortedNumbers:
+                    print(userwish[num]);
                     if i == requested_length:
                         break
-                    playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
-                    if 'playtime_2weeks' in game:
-                        playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
-
-                    em.add_field(name='{} ({})'.format(game['name'], game['appid']),
-                                 value=playtime, inline=False)
+                    output += '{} ({})'.format(userwish[num]['name'], num)
+                    if userwish[num].get('price', False):
+                        output += ' - {}'.format(int(userwish[num]['price']) // 100)
+                    output += '\n'
                     i += 1
+                em = discord.Embed(title='{} 님의 찜 목록이에요.'.format(msg[2]),
+                                   description=output, inline=False,
+                                   colour=discord.Colour(0x1b2838))
+
                 await app.send_message(message.channel, embed=em)
 
         elif msg[1] == 'bestseller':
