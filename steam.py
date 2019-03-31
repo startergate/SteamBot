@@ -138,8 +138,8 @@ async def on_message(message):
                     requested_length = 20
                 if len(userwish) < requested_length:
                     requested_length = len(userwish)
-                if requested_length > 70:
-                    requested_length = 70
+                if requested_length > 50:
+                    requested_length = 50
                 sortedNumbers = sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish]['priority'] != 0 else requested_length + 1)
                 sortedNumbers += sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish]['priority'] == 0 else requested_length + 1)
                 print(len(userwish))
@@ -152,8 +152,9 @@ async def on_message(message):
                         break
                     output += '{} ({})'.format(userwish[num]['name'], num)
                     print(userwish[num])
-                    if userwish[num]['subs'][0].get('price', False):
-                        output += ' - {}'.format(int(userwish[num]['subs'][0]['price']) // 100)
+                    if userwish[num].get('subs', False):
+                        if userwish[num]['subs'][0].get('price', False):
+                            output += ' - ₩ {:,}'.format(int(userwish[num]['subs'][0]['price']) // 100)
                     output += '\n'
                     i += 1
                 em = discord.Embed(title='{} 님의 찜 목록이에요.'.format(msg[2]),
