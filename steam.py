@@ -35,6 +35,8 @@ async def on_message(message):
         em.add_field(name='st!game recent [ username ]', value='유저가 최근 2주간 플레이한 게임을 가져와요.', inline=False)
         em.add_field(name='st!game library [ username ]', value='유저의 라이브러리를 10개 가져와요.', inline=False)
         em.add_field(name='st!game library [ username ] [ count ]', value='유저의 라이브러리를 입력한 만큼 가져와요. (최대 25개)', inline=False)
+        em.add_field(name='st!game wishlist [ username ]', value='유저의 찜 목록를 10개 가져와요.', inline=False)
+        em.add_field(name='st!game wishlist [ username ] [ count ]', value='유저의 찜 목록를 입력한 만큼 가져와요. (최대 50개)', inline=False)
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
             await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 쓸 수 있어요!")
