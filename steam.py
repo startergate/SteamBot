@@ -135,22 +135,25 @@ async def on_message(message):
                         await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
                         return
                 else:
-                    requested_length = 10
+                    requested_length = 20
                 if len(userwish) < requested_length:
                     requested_length = len(userwish)
-                if requested_length > 25:
-                    requested_length = 25
-                sortedNumbers = sorted(userwish, key=lambda wish: userwish[wish]['rank'])
+                if requested_length > 70:
+                    requested_length = 70
+                sortedNumbers = sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish]['priority'] != 0 else requested_length + 1)
+                sortedNumbers += sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish]['priority'] == 0 else requested_length + 1)
                 print(len(userwish))
                 i = 0
                 output = '찜 목록에 있는 게임 {}개를 불러왔어요.\n'.format(requested_length)
+                print(sortedNumbers)
                 for num in sortedNumbers:
                     print(userwish[num]);
                     if i == requested_length:
                         break
                     output += '{} ({})'.format(userwish[num]['name'], num)
-                    if userwish[num].get('price', False):
-                        output += ' - {}'.format(int(userwish[num]['price']) // 100)
+                    print(userwish[num])
+                    if userwish[num]['subs'][0].get('price', False):
+                        output += ' - {}'.format(int(userwish[num]['subs'][0]['price']) // 100)
                     output += '\n'
                     i += 1
                 em = discord.Embed(title='{} 님의 찜 목록이에요.'.format(msg[2]),
