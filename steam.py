@@ -1,14 +1,16 @@
 import asyncio
 import discord
 import requests
-from bs4 import BeautifulSoup;
+from bs4 import BeautifulSoup
 import xml.etree.ElementTree as et
+import threading
+
+from modules.liveupdate import *
 
 app = discord.Client()
 
 token = 'NTU1MzM5MjM2MDM1OTE5ODgy.D2p1kA.hM6p3MhaLbuJnS7H0hUeRrfG2ys'
-
-
+realtime = SteamLiveUpdate(app)
 @app.event
 async def on_ready():
     print("로그인 정보>")
@@ -17,6 +19,7 @@ async def on_ready():
     print("=============")
 
     await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
+
 
 
 @app.event
@@ -260,6 +263,9 @@ async def on_message(message):
 
             em = discord.Embed(title='스팀 인기 할인 제품', description=output_text, colour=discord.Colour(0x1b2838))
             await app.send_message(message.channel, embed=em)
+        elif msg[1] == 'realtime':
+            realtime.AddList(message.channel)
+            await app.send_message(message.channel, ':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
 
 
 def get_steam_id(name, want_all=False):
@@ -280,6 +286,12 @@ def isNumber(s):
         return True
     except ValueError:
         return False
+
+
+
+
+
+
 
 
 app.run(token)
