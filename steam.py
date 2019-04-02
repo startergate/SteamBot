@@ -3,14 +3,16 @@ import discord
 import requests
 import threading
 import time
+import watchdog
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as et
 
 app = discord.Client()
 
 token = 'NTU1MzM5MjM2MDM1OTE5ODgy.D2p1kA.hM6p3MhaLbuJnS7H0hUeRrfG2ys'
-realtimeList = [123]
+realtimeList = []
 
+loop = asyncio.get_event_loop()
 
 @app.event
 async def on_ready():
@@ -18,11 +20,9 @@ async def on_ready():
     print(app.user.name)
     print(app.user.id)
     print("=============")
-    t = threading.Thread(target=realtime)
-    t.daemon = True
-    t.start()
-    await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
 
+    await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
+    loop.create_task(realtime())
 
 @app.event
 async def on_message(message):
@@ -290,12 +290,12 @@ def isNumber(s):
         return False
 
 
-def realtime():
+async def realtime():
+    await asyncio.sleep(0.5)
     recentRealtime = ''
 
-    print(app)
     while True:
-        time.sleep(0.5)
+        await asyncio.sleep(0.1)
         f = open('./buffer.txt', mode='rt', encoding='utf-8')
         g_info = f.read()
         if g_info != recentRealtime:
@@ -303,7 +303,7 @@ def realtime():
             print(g_info)
             recentRealtime = g_info
             for channel in realtimeList:
-                app.send_message(channel, recentRealtime)
+                await app.send_message(app.get_channel(channel.id), recentRealtime)
 
 
 app.run(token)
