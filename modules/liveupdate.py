@@ -1,41 +1,36 @@
 import asyncio
-import discord
 import json
 import websocket
-import threading
 
-class SteamLiveUpdate(threading.Thread):
-    realtimeList = []
-    def AddList(self, channel):
-        self.realtimeList.append(channel)
 
-    def on_message_live(self, ws, message):
-        message = json.loads(message)
-        if message["Type"] == 'UsersOnline':
-            return
-        gameid = list(message['Apps'].keys())[0]
-        messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
+def on_message_live(ws, message):
+    print(message)
+    message = json.loads(message)
+    if message["Type"] == 'UsersOnline':
+        return
+    gameid = list(message['Apps'].keys())[0]
+    messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
                                                      gameid)
-        for channel in self.realtimeList:
-            self.app.send_message(channel, messageStr)
+    f = open('../buffer.txt', mode='wt', encoding='utf-8')
+    f.write(messageStr)
 
-    def on_error_live(self, ws, error):
-        print(error)
 
-    def on_close_live(self, ws):
-        print("### closed ###")
+def on_error_live(ws, error):
+    print(error)
 
-    def on_open_live(self, ws):
-        pass
 
-    def __init__(self, app):
+def on_close_live(ws):
+    print("### closed ###")
 
-        self.app = app
 
-        websocket.enableTrace(True)
-        self.ws = websocket.WebSocketApp("wss://steamdb.info/api/realtime/",
-                                         on_message=self.on_message_live,
-                                         on_error=self.on_error_live,
-                                         on_close=self.on_close_live)
-        self.ws.on_open = self.on_open_live
-        self.ws.run_forever()
+def on_open_live(ws):
+    pass
+
+
+websocket.enableTrace(True)
+ws = websocket.WebSocketApp("wss://steamdb.info/api/realtime/",
+                            on_message=on_message_live,
+                            on_error=on_error_live,
+                            on_close=on_close_live)
+ws.on_open = on_open_live
+ws.run_forever()
