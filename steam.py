@@ -1,9 +1,6 @@
 import asyncio
 import discord
 import requests
-import threading
-import time
-import watchdog
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as et
 
@@ -42,6 +39,7 @@ async def on_message(message):
         em.add_field(name='st!game library [ username ] [ count ]', value='유저의 라이브러리를 입력한 만큼 가져와요. (최대 25개)', inline=False)
         em.add_field(name='st!game wishlist [ username ]', value='유저의 찜 목록를 10개 가져와요.', inline=False)
         em.add_field(name='st!game wishlist [ username ] [ count ]', value='유저의 찜 목록를 입력한 만큼 가져와요. (최대 50개)', inline=False)
+        em.add_field(name='st!game realtime', value='해당 채널로 스팀 실시간 업데이트를 가져와요.', inline=False)
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
             await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 쓸 수 있어요!")
