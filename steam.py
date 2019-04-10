@@ -263,6 +263,17 @@ async def on_message(message):
 
             em = discord.Embed(title='스팀 인기 할인 제품', description=output_text, colour=discord.Colour(0x1b2838))
             await app.send_message(message.channel, embed=em)
+        elif msg[1] == 'hot':
+            new_src = requests.get('https://store.steampowered.com/stats/?l=koreana')
+            new_src = BeautifulSoup(new_src.text, 'html.parser')
+            new_prd = new_src.find_all('a', class_='player_count_row')
+
+
+            em = discord.Embed(title='스팀 최다 플레이어', description='스팀의 현재 최다 플레이어 수 목록이에요.', colour=discord.Colour(0x1b2838))
+            for product in new_prd:
+                em.add_field(name=product.find('span', class_='gameLink').getText(), value="현재 플레이어: {} | 오늘 최고 기록: {}".format(product.findAll('span', class_='gameLink')[0].getText(), product.findAll('span', class_='gameLink')[1].getText()))
+
+            await app.send_message(message.channel, embed=em)
         elif msg[1] == 'realtime':
             realtimeList.append(message.channel)
             await app.send_message(message.channel, ':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
