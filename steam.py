@@ -35,131 +35,9 @@ async def on_message(message):
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
             await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 쓸 수 있어요!")
-    elif msg[0] == "st!profile":
-        if len(msg) == 1:
-            await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
-            return
-        xmls = get_steam_id(msg[1], True)
-        if xmls == 0:
-            await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
-            return
-        if xmls.find('onlineState').text == 'in-game':
-            statusColor = discord.Colour(0x90ba3c)
-        elif xmls.find('onlineState').text == 'online':
-            statusColor = discord.Colour(0x57cbde)
-        elif xmls.find('onlineState').text == 'offline':
-            statusColor = discord.Colour(0x898989)
-        em = discord.Embed(title=xmls.find('steamID').text, description=xmls.find('stateMessage').text.replace('<br/>', ': '), colour=statusColor).set_thumbnail(url=xmls.find('avatarIcon').text)
-        em.add_field(name='요약', value=xmls.find('summary').text.replace('<br>', '\n'), inline=False)
-        await app.send_message(message.channel, embed=em)
     elif msg[0] == "st!game":
         if len(msg) == 1:
             await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
-        elif msg[1] == 'recent':
-            if len(msg) == 2:
-                await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
-            elif len(msg) == 3:
-                steamid = get_steam_id(msg[2])
-                if steamid == 0:
-                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
-                    return
-                recents = requests.get('http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&format=json')
-                recents = recents.json()
-                if recents['response']['total_count'] == 0:
-                    await app.send_message(message.channel, '어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
-                    return
-                em = discord.Embed(title=msg[2] + '님이 최근에 플레이하신 게임 목록이에요.', description='지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨어요.', colour=discord.Colour(0x1b2838))
-                total_time = 0;
-                for text in recents['response']['games']:
-                    total_time += text['playtime_2weeks'];
-                    em.add_field(name=text['name'] + ' (' + str(text['appid']) + ')', value='지난 2주간 ' + str("%.2f" % (text['playtime_2weeks'] / 60)) + ' 시간동안 플레이 함\n평생 동안 ' + str("%.2f" % (text['playtime_forever'] / 60)) + ' 시간동안 플레이 함', inline=False)
-                em.add_field(name='총 플레이 시간', value=msg[2] + '님은 지난 2주간 ' + str("%.2f" % (total_time / 60)) + '시간동안 플레이하셨어요!')
-                await app.send_message(message.channel, embed=em)
-            else:
-                await app.send_message(message.channel, "ID를 입력해주세요.")
-        elif msg[1] == 'library':
-            if len(msg) == 1:
-                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
-            else:
-                steamid = get_steam_id(msg[2])
-                if steamid == 0:
-                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
-                    return
-                userlib = requests.get('http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&include_appinfo=1&format=json')
-                userlib = userlib.json()
-                games = userlib['response']['games']
-                games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
-                if len(msg) > 3:
-                    try:
-                        requested_length = int(msg[3])
-                    except ValueError:
-                        await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
-                        return
-                else:
-                    requested_length = 10
-                if len(games) < requested_length:
-                    requested_length = len(games)
-                if requested_length > 25:
-                    requested_length = 25
-                i = 0
-                em = discord.Embed(title='{} 님의 라이브러리에요.'.format(msg[2]),
-                                   description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False, colour=discord.Colour(0x1b2838))
-                for game in games:
-                    if i == requested_length:
-                        break
-                    playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
-                    if 'playtime_2weeks' in game:
-                        playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
-
-                    em.add_field(name='{} ({})'.format(game['name'], game['appid']),
-                                 value=playtime, inline=False)
-                    i += 1
-                await app.send_message(message.channel, embed=em)
-        elif msg[1] == 'wishlist':
-            if len(msg) == 1:
-                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
-            else:
-                steamid = get_steam_id(msg[2])
-                if steamid == 0:
-                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
-                    return
-                userwish = requests.get('https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/'.format(steamid))
-                userwish = userwish.json()
-                if len(msg) > 3:
-                    try:
-                        requested_length = int(msg[3])
-                    except ValueError:
-                        await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
-                        return
-                else:
-                    requested_length = 20
-                if len(userwish) < requested_length:
-                    requested_length = len(userwish)
-                if requested_length > 50:
-                    requested_length = 50
-                sortedNumbers = sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish]['priority'] != 0 else requested_length + 1)
-                sortedNumbers += sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish]['priority'] == 0 else requested_length + 1)
-                print(len(userwish))
-                i = 0
-                output = '찜 목록에 있는 게임 {}개를 불러왔어요.\n'.format(requested_length)
-                print(sortedNumbers)
-                for num in sortedNumbers:
-                    print(userwish[num]);
-                    if i == requested_length:
-                        break
-                    output += '{} ({})'.format(userwish[num]['name'], num)
-                    print(userwish[num])
-                    if userwish[num].get('subs', False):
-                        if userwish[num]['subs'][0].get('price', False):
-                            output += ' - ₩ {:,}'.format(int(userwish[num]['subs'][0]['price']) // 100)
-                    output += '\n'
-                    i += 1
-                em = discord.Embed(title='{} 님의 찜 목록이에요.'.format(msg[2]),
-                                   description=output, inline=False,
-                                   colour=discord.Colour(0x1b2838))
-
-                await app.send_message(message.channel, embed=em)
-
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
@@ -269,6 +147,144 @@ async def on_message(message):
         elif msg[1] == 'realtime':
             realtimeList.append(message.channel)
             await app.send_message(message.channel, ':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
+    elif msg[0] == "st!user":
+        if len(msg) == 1:
+            await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
+        elif msg[1] == 'recent':
+            if len(msg) == 2:
+                await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
+            elif len(msg) == 3:
+                steamid = get_steam_id(msg[2])
+                if steamid == 0:
+                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
+                    return
+                recents = requests.get(
+                    'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&format=json')
+                recents = recents.json()
+                if recents['response']['total_count'] == 0:
+                    await app.send_message(message.channel,
+                                           '어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
+                    return
+                em = discord.Embed(title=msg[2] + '님이 최근에 플레이하신 게임 목록이에요.',
+                                   description='지난 2주간 ' + str(recents['response']['total_count']) + '개의 게임을 플레이하셨어요.',
+                                   colour=discord.Colour(0x1b2838))
+                total_time = 0;
+                for text in recents['response']['games']:
+                    total_time += text['playtime_2weeks'];
+                    em.add_field(name=text['name'] + ' (' + str(text['appid']) + ')', value='지난 2주간 ' + str(
+                        "%.2f" % (text['playtime_2weeks'] / 60)) + ' 시간동안 플레이 함\n평생 동안 ' + str(
+                        "%.2f" % (text['playtime_forever'] / 60)) + ' 시간동안 플레이 함', inline=False)
+                em.add_field(name='총 플레이 시간',
+                             value=msg[2] + '님은 지난 2주간 ' + str("%.2f" % (total_time / 60)) + '시간동안 플레이하셨어요!')
+                await app.send_message(message.channel, embed=em)
+            else:
+                await app.send_message(message.channel, "ID를 입력해주세요.")
+        elif msg[1] == 'library':
+            if len(msg) == 1:
+                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
+            else:
+                steamid = get_steam_id(msg[2])
+                if steamid == 0:
+                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
+                    return
+                userlib = requests.get(
+                    'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid=' + steamid + '&include_appinfo=1&format=json')
+                userlib = userlib.json()
+                games = userlib['response']['games']
+                games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
+                if len(msg) > 3:
+                    try:
+                        requested_length = int(msg[3])
+                    except ValueError:
+                        await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
+                        return
+                else:
+                    requested_length = 10
+                if len(games) < requested_length:
+                    requested_length = len(games)
+                if requested_length > 25:
+                    requested_length = 25
+                i = 0
+                em = discord.Embed(title='{} 님의 라이브러리에요.'.format(msg[2]),
+                                   description='플레이시간 상위 {}개를 불러왔어요.'.format(requested_length), inline=False,
+                                   colour=discord.Colour(0x1b2838))
+                for game in games:
+                    if i == requested_length:
+                        break
+                    playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
+                    if 'playtime_2weeks' in game:
+                        playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
+
+                    em.add_field(name='{} ({})'.format(game['name'], game['appid']),
+                                 value=playtime, inline=False)
+                    i += 1
+                await app.send_message(message.channel, embed=em)
+        elif msg[1] == 'wishlist':
+            if len(msg) == 1:
+                await app.send_message(message.channel, "명령어를 제대로 입력해주세요!.")
+            else:
+                steamid = get_steam_id(msg[2])
+                if steamid == 0:
+                    await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
+                    return
+                userwish = requests.get(
+                    'https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/'.format(steamid))
+                userwish = userwish.json()
+                if len(msg) > 3:
+                    try:
+                        requested_length = int(msg[3])
+                    except ValueError:
+                        await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
+                        return
+                else:
+                    requested_length = 20
+                if len(userwish) < requested_length:
+                    requested_length = len(userwish)
+                if requested_length > 50:
+                    requested_length = 50
+                sortedNumbers = sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish][
+                                                                                                    'priority'] != 0 else requested_length + 1)
+                sortedNumbers += sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish][
+                                                                                                     'priority'] == 0 else requested_length + 1)
+                print(len(userwish))
+                i = 0
+                output = '찜 목록에 있는 게임 {}개를 불러왔어요.\n'.format(requested_length)
+                print(sortedNumbers)
+                for num in sortedNumbers:
+                    print(userwish[num]);
+                    if i == requested_length:
+                        break
+                    output += '{} ({})'.format(userwish[num]['name'], num)
+                    print(userwish[num])
+                    if userwish[num].get('subs', False):
+                        if userwish[num]['subs'][0].get('price', False):
+                            output += ' - ₩ {:,}'.format(int(userwish[num]['subs'][0]['price']) // 100)
+                    output += '\n'
+                    i += 1
+                em = discord.Embed(title='{} 님의 찜 목록이에요.'.format(msg[2]),
+                                   description=output, inline=False,
+                                   colour=discord.Colour(0x1b2838))
+
+                await app.send_message(message.channel, embed=em)
+        elif msg[1] == "profile":
+            if len(msg) < 3:
+                await app.send_message(message.channel, "스팀 아이디를 입력해주세요!.")
+                return
+            xmls = get_steam_id(msg[2], True)
+            if xmls == 0:
+                await app.send_message(message.channel, "유효한 스팀 아이디를 사용해주세요.")
+                return
+            if xmls.find('onlineState').text == 'in-game':
+                statusColor = discord.Colour(0x90ba3c)
+            elif xmls.find('onlineState').text == 'online':
+                statusColor = discord.Colour(0x57cbde)
+            elif xmls.find('onlineState').text == 'offline':
+                statusColor = discord.Colour(0x898989)
+            em = discord.Embed(title=xmls.find('steamID').text,
+                               description=xmls.find('stateMessage').text.replace('<br/>', ': '),
+                               colour=statusColor).set_thumbnail(url=xmls.find('avatarIcon').text)
+            em.add_field(name='요약', value=xmls.find('summary').text.replace('<br>', '\n'), inline=False)
+            await app.send_message(message.channel, embed=em)
 
 
 def get_steam_id(name, want_all=False):
@@ -292,7 +308,7 @@ def isNumber(s):
 
 
 async def realtime():
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.1)
     recentRealtime = ''
 
     while True:
@@ -300,8 +316,6 @@ async def realtime():
         f = open('./buffer.txt', mode='rt', encoding='utf-8')
         g_info = f.read()
         if g_info != recentRealtime:
-            print(realtimeList)
-            print(g_info)
             recentRealtime = g_info
             for channel in realtimeList:
                 await app.send_message(app.get_channel(channel.id), recentRealtime)
