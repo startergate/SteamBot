@@ -8,6 +8,10 @@ def on_message_live(ws, message):
     message = json.loads(message)
     if message["Type"] == 'UsersOnline':
         return
+    if message["Type"] == 'LogOff':
+        return
+    if message["Type"] == 'LogOn':
+        return
     gameid = list(message['Apps'].keys())[0]
     messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
                                                      gameid)
