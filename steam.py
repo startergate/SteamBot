@@ -30,7 +30,7 @@ async def on_message(message):
     if msg[0] == "st!help":
         em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!', colour=discord.Colour(0x1b2838))
         em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 「도움!」을 외쳐주세요!', inline=False)
-        em.add_field(name='st!game', value='new | 스팀 최근 출시 제품들을 가져와요.\nspecials | 스팀 인기 할인 제품들을 가져와요.\nbestseller | 스팀 최고 인기 제품 상위 25개를 가져와요.\nbestseller [ new, oncoming ] | 스팀 인기 제품을 가져와요. 각각 신제품, 출시 예정 제품입니다.\nhot | 스팀 최다 플레이 중인 게임을 가져와요.\nhot [ count ] | 스팀 최다 플레이 중인 게임을 가져와요. (최대 25개)\nrealtime | 해당 채널로 스팀 실시간 업데이트를 가져와요.', inline=False)
+        em.add_field(name='st!game', value='new | 스팀 최근 출시 제품들을 가져와요.\nspecials | 스팀 인기 할인 제품들을 가져와요.\nbestseller | 스팀 최고 인기 제품 상위 25개를 가져와요.\nbestseller [ new, oncoming ] | 스팀 인기 제품을 가져와요. 각각 신제품, 출시 예정 제품이에요.\nhot | 스팀 최다 플레이 중인 게임을 가져와요.\nhot [ count ] | 스팀 최다 플레이 중인 게임을 가져와요. (최대 25개)\nrealtime | 해당 채널로 스팀 실시간 업데이트를 가져와요.', inline=False)
         em.add_field(name='st!user', value='profile [ username ] | 유저의 프로필을 가져와요.\nrecent [ username ] | 유저가 최근 2주간 플레이한 게임을 가져와요.\nlibrary [ username ] | 유저의 라이브러리를 10개 가져와요.\nlibrary [ username ] [ count ] | 유저의 라이브러리를 입력한 만큼 가져와요. (최대 25개)\nwishlist [ username ] | 유저의 찜 목록를 10개 가져와요.\nwishlist [ username ] [ count ] | 유저의 찜 목록를 입력한 만큼 가져와요. (최대 50개)', inline=False)
         await app.send_message(message.channel, embed=em)
         if len(msg) > 1:
@@ -134,14 +134,33 @@ async def on_message(message):
             em = discord.Embed(title='스팀 인기 할인 제품', description=output_text, colour=discord.Colour(0x1b2838))
             await app.send_message(message.channel, embed=em)
         elif msg[1] == 'hot':
-            new_src = requests.get('https://store.steampowered.com/stats/?l=koreana')
-            new_src = BeautifulSoup(new_src.text, 'html.parser')
-            new_prd = new_src.find_all('a', class_='player_count_row')
+            hot_src = requests.get('https://store.steampowered.com/stats/?l=koreana')
+            hot_src = BeautifulSoup(hot_src.text, 'html.parser')
+            hot_prd = hot_src.find_all('tr', class_='player_count_row')
 
-
+            if len(msg) > 3:
+                try:
+                    requested_length = int(msg[3])
+                except ValueError:
+                    await app.send_message(message.channel, "게임 갯수는 정수를 사용해주세요.")
+                    return
+            else:
+                requested_length = 10
+            if len(hot_prd) < requested_length:
+                requested_length = len(hot_prd)
+            if requested_length > 25:
+                requested_length = 25
             em = discord.Embed(title='스팀 최다 플레이어', description='스팀의 현재 최다 플레이어 수 목록이에요.', colour=discord.Colour(0x1b2838))
-            for product in new_prd:
-                em.add_field(name=product.find('span', class_='gameLink').getText(), value="현재 플레이어: {} | 오늘 최고 기록: {}".format(product.findAll('span', class_='gameLink')[0].getText(), product.findAll('span', class_='gameLink')[1].getText()))
+            i = 0
+            for product in hot_prd:
+                print(product)
+                if i == requested_length:
+                    break
+                name = '{} ({})'.format(product.find('a', class_='gameLink').getText(), product.find('a', class_='gameLink')['href'].replace('https://store.steampowered.com/app/', '').split('/')[0])
+                value = "현재 플레이어: {}명 | 오늘 최고 기록: {}명".format(product.find_all('span', class_='currentServers')[0].getText(), product.find_all('span', class_='currentServers')[1].getText())
+                em.add_field(name=name, value=value, inline=False)
+
+                i += 1
 
             await app.send_message(message.channel, embed=em)
         elif msg[1] == 'realtime':
