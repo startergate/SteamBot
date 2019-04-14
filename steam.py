@@ -162,6 +162,21 @@ async def on_message(message):
                 i += 1
 
             await app.send_message(message.channel, embed=em)
+        elif msg[1] == 'news':
+            if len(msg) > 2:
+                if len(msg) > 3:
+                    try:
+                        requested_length = int(msg[3])
+                    except ValueError:
+                        await app.send_message(message.channel, ":x: 뉴스 갯수는 정수를 사용해주세요.")
+                        return
+                else:
+                    requested_length = 10
+                if requested_length > 25:
+                    requested_length = 25
+                id = get_game_id(msg[2])
+            else:
+                await app.send_message(message.channel, ':x: 게임 이름을 입력해주세요.')
         elif msg[1] == 'realtime':
             realtimeList.append(message.channel)
             await app.send_message(message.channel, ':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
