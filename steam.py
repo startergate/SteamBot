@@ -134,11 +134,7 @@ async def on_message(message):
             em = discord.Embed(title='스팀 인기 할인 제품', description=output_text, colour=discord.Colour(0x1b2838))
             await app.send_message(message.channel, embed=em)
         elif msg[1] == 'hot':
-            hot_src = requests.get('https://store.steampowered.com/stats/?l=koreana')
-            hot_src = BeautifulSoup(hot_src.text, 'html.parser')
-            hot_prd = hot_src.find_all('tr', class_='player_count_row')
-
-            if len(msg) > 3:
+            if len(msg) > 2:
                 try:
                     requested_length = int(msg[3])
                 except ValueError:
@@ -146,6 +142,10 @@ async def on_message(message):
                     return
             else:
                 requested_length = 10
+
+            hot_src = requests.get('https://store.steampowered.com/stats/?l=koreana')
+            hot_src = BeautifulSoup(hot_src.text, 'html.parser')
+            hot_prd = hot_src.find_all('tr', class_='player_count_row')
             if len(hot_prd) < requested_length:
                 requested_length = len(hot_prd)
             if requested_length > 25:
@@ -153,7 +153,6 @@ async def on_message(message):
             em = discord.Embed(title='스팀 최다 플레이어', description='스팀의 현재 최다 플레이어 수 목록이에요.', colour=discord.Colour(0x1b2838))
             i = 0
             for product in hot_prd:
-                print(product)
                 if i == requested_length:
                     break
                 name = '{} ({})'.format(product.find('a', class_='gameLink').getText(), product.find('a', class_='gameLink')['href'].replace('https://store.steampowered.com/app/', '').split('/')[0])
@@ -317,6 +316,14 @@ def get_steam_id(name, want_all=False):
         if want_all:
             return xmls
         return xmls.find('steamID64').text
+
+def get_game_id(name):
+    # Do Something
+    src = requests.get('https://store.steampowered.com/search/?term={}'.format(name.replace(' ', '+'))).text
+    src = BeautifulSoup(src, 'html.parser')
+    target = src.find('a', _class='search_result_row')
+
+    return {target.find('span', _class='title').title: target['href'].replace('https://store.steampowered.com/app/', '').split('/')[0]}
 
 
 def isNumber(s):
