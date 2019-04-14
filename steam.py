@@ -175,6 +175,10 @@ async def on_message(message):
                 if requested_length > 25:
                     requested_length = 25
                 id = get_game_id(msg[2])
+                news_src = requests.get('http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=300&format=json'.format(id.keys()[0], requested_length))
+                news_src = news_src.json()
+
+                news_text = news_src['appnews']['newsitems']
             else:
                 await app.send_message(message.channel, ':x: 게임 이름을 입력해주세요.')
         elif msg[1] == 'realtime':
