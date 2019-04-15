@@ -4,6 +4,7 @@ import discord
 import requests
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as et
+import tomd
 
 app = discord.Client()
 
@@ -175,10 +176,28 @@ async def on_message(message):
                 if requested_length > 25:
                     requested_length = 25
                 id = get_game_id(msg[2])
-                news_src = requests.get('http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=300&format=json'.format(id.keys()[0], requested_length))
+                if id == {}:
+                    await app.send_message(message.channel, ':x: 게임을 찾을 수 없어요.')
+                    return
+                await app.send_message(message.channel, ":white_check_mark: 로딩 중 입니다.")
+                keys = list(id.keys())
+                news_src = requests.get('http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=100&format=json'.format(keys[0], requested_length))
                 news_src = news_src.json()
 
+                print(news_src)
+
                 news_text = news_src['appnews']['newsitems']
+                if requested_length > len(news_text):
+                    requested_length = len(news_text)
+                em = discord.Embed(title=id[keys[0]], description="{}개의 뉴스를 가져왔어요.".format(requested_length))
+                i = 0
+                for news in news_text:
+                    if i > requested_length:
+                        break
+                    print(tomd.convert(news['contents']))
+                    em.add_field(name='{} - [{}]({})'.format(news['feedlabel'], news['title'], news['url']), value=tomd.convert(news['contents']))
+                    i += 1
+                await app.send_message(message.channel, embed=em)
             else:
                 await app.send_message(message.channel, ':x: 게임 이름을 입력해주세요.')
         elif msg[1] == 'realtime':
@@ -207,7 +226,7 @@ async def on_message(message):
                                    colour=discord.Colour(0x1b2838))
                 total_time = 0;
                 for text in recents['response']['games']:
-                    total_time += text['playtime_2weeks'];
+                    total_time += text['playtime_2weeks']
                     em.add_field(name='{} ({})'.format(text['name'], text['appid']),
                                  value='지난 2주간 {} 시간동안 플레이 함\n평생 동안 {} 시간동안 플레이 함'.format("%.2f" % (text['playtime_2weeks'] / 60), "%.2f" % (text['playtime_forever'] / 60)),
                                  inline=False)
@@ -239,7 +258,7 @@ async def on_message(message):
                         await app.send_message(message.channel, ":x: 게임 갯수는 정수를 사용해주세요.")
                         return
                 else:
-                    requested_length = 10
+                    requested_length = 5
                 if len(games) < requested_length:
                     requested_length = len(games)
                 if requested_length > 25:
@@ -336,13 +355,16 @@ def get_steam_id(name, want_all=False):
             return xmls
         return xmls.find('steamID64').text
 
+
 def get_game_id(name):
     # Do Something
     src = requests.get('https://store.steampowered.com/search/?term={}'.format(name.replace(' ', '+'))).text
     src = BeautifulSoup(src, 'html.parser')
-    target = src.find('a', _class='search_result_row')
-
-    return {target.find('span', _class='title').title: target['href'].replace('https://store.steampowered.com/app/', '').split('/')[0]}
+    try:
+        target = src.find_all('a', class_='search_result_row')[0]
+    except IndexError:
+        return {}
+    return {target['href'].replace('https://store.steampowered.com/app/', '').split('/')[0]: target.find('span', class_='title').text}
 
 
 def isNumber(s):
