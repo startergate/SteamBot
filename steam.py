@@ -4,7 +4,7 @@ import discord
 import requests
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as et
-import tomd
+from markdownify import markdownify as md
 
 app = discord.Client()
 
@@ -181,7 +181,7 @@ async def on_message(message):
                     return
                 await app.send_message(message.channel, ":white_check_mark: 로딩 중 입니다.")
                 keys = list(id.keys())
-                news_src = requests.get('http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=100&format=json'.format(keys[0], requested_length))
+                news_src = requests.get('http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=300&format=json'.format(keys[0], requested_length))
                 news_src = news_src.json()
 
                 print(news_src)
@@ -194,8 +194,8 @@ async def on_message(message):
                 for news in news_text:
                     if i > requested_length:
                         break
-                    print(tomd.convert(news['contents']))
-                    em.add_field(name='{} - [{}]({})'.format(news['feedlabel'], news['title'], news['url']), value=tomd.convert(news['contents']))
+                    print(md(news['contents']))
+                    em.add_field(name='{} - {}'.format(news['feedlabel'], news['title']), value=md(news['contents']) + '**[자세히 보기]({})**'.format(news['url']))
                     i += 1
                 await app.send_message(message.channel, embed=em)
             else:
