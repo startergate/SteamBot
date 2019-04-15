@@ -165,17 +165,8 @@ async def on_message(message):
             await app.send_message(message.channel, embed=em)
         elif msg[1] == 'news':
             if len(msg) > 2:
-                if len(msg) > 3:
-                    try:
-                        requested_length = int(msg[3])
-                    except ValueError:
-                        await app.send_message(message.channel, ":x: 뉴스 갯수는 정수를 사용해주세요.")
-                        return
-                else:
-                    requested_length = 10
-                if requested_length > 25:
-                    requested_length = 25
-                id = get_game_id(msg[2])
+                requested_length = 10
+                id = get_game_id(message.content.replace('st!game news ', ''))
                 if id == {}:
                     await app.send_message(message.channel, ':x: 게임을 찾을 수 없어요.')
                     return
@@ -183,8 +174,6 @@ async def on_message(message):
                 keys = list(id.keys())
                 news_src = requests.get('http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=300&format=json'.format(keys[0], requested_length))
                 news_src = news_src.json()
-
-                print(news_src)
 
                 news_text = news_src['appnews']['newsitems']
                 if requested_length > len(news_text):
@@ -194,8 +183,7 @@ async def on_message(message):
                 for news in news_text:
                     if i > requested_length:
                         break
-                    print(md(news['contents']))
-                    em.add_field(name='{} - {}'.format(news['feedlabel'], news['title']), value=md(news['contents']) + '**[자세히 보기]({})**'.format(news['url']))
+                    em.add_field(name='{} - {}'.format(news['feedlabel'], news['title']), value=md(news['contents']) + ' **[자세히 보기]({})**'.format(news['url']))
                     i += 1
                 await app.send_message(message.channel, embed=em)
             else:
@@ -305,10 +293,8 @@ async def on_message(message):
                                                                                                     'priority'] != 0 else requested_length + 1)
                 sortedNumbers += sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish][
                                                                                                      'priority'] == 0 else requested_length + 1)
-                print(len(userwish))
                 i = 0
                 output = '찜 목록에 있는 게임 {}개를 불러왔어요.\n'.format(requested_length)
-                print(sortedNumbers)
                 for num in sortedNumbers:
                     if i == requested_length:
                         break
