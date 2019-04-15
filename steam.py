@@ -166,6 +166,10 @@ async def on_message(message):
         elif msg[1] == 'news':
             if len(msg) > 2:
                 requested_length = 10
+                halflife3 = ['halflife 3', 'hl3', 'halflife3', 'hl 3']
+                if (message.content.replace('st!game news ', '').lower() in halflife3):
+                    await app.send_message(message.channel, ':x: 이미 뒤진 게임이에요.')
+                    return
                 id = get_game_id(message.content.replace('st!game news ', ''))
                 if id == {}:
                     await app.send_message(message.channel, ':x: 게임을 찾을 수 없어요.')
