@@ -193,6 +193,17 @@ async def on_message(message):
             else:
                 await app.send_message(message.channel, ':x: 게임 이름을 입력해주세요.')
         elif msg[1] == 'realtime':
+            if len(msg) > 2:
+                if msg[2] == 'stop':
+                    if message.channel not in realtimeList:
+                        await app.send_message(message.channel, ':x: 등록되지 않은 채널이에요!')
+                        return
+                    realtimeList.remove(message.channel)
+                    await app.send_message(message.channel, ':white_check_mark: 스팀 실시간 업데이트 수신을 중지했어요!')
+                    return
+            if message.channel in realtimeList:
+                await app.send_message(message.channel, ':x: 이미 등록된 채널이에요!')
+                return
             realtimeList.append(message.channel)
             await app.send_message(message.channel, ':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
     elif msg[0] == "st!user":
