@@ -5,6 +5,9 @@ import requests
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as et
 from markdownify import markdownify as md
+import json
+import websocket
+import threading
 
 app = discord.Client()
 
@@ -21,7 +24,45 @@ async def on_ready():
     print("=============")
 
     await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
-    loop.create_task(realtime())
+
+    async def on_message_live(ws, message):
+        await asyncio.sleep(0.01)
+        print(message)
+        message = json.loads(message)
+        if message["Type"] == 'UsersOnline':
+            return
+        if message["Type"] == 'LogOff':
+            return
+        if message["Type"] == 'LogOn':
+            return
+        gameid = list(message['Apps'].keys())[0]
+        messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
+                                                     gameid)
+        if message['Packages'] != {}:
+            packageid = list(message['Packages'].keys())[0]
+            messageStr += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid);
+        print(messageStr)
+        for channel in realtimeList:
+            app.send_message(app.get_channel(channel.id), messageStr)
+
+    def on_error_live(ws, error):
+        print(error)
+
+    def on_close_live(ws):
+        print("### closed ###")
+
+    def on_open_live(ws):
+        pass
+
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp("wss://steamdb.info/api/realtime/",
+                                 on_message=on_message_live,
+                                 on_error=on_error_live,
+                                 on_close=on_close_live)
+    ws.on_open = on_open_live
+    wst = threading.Thread(target=ws.run_forever)
+    wst.daemon = True
+    wst.start()
 
 @app.event
 async def on_message(message):
@@ -376,18 +417,17 @@ def isNumber(s):
         return False
 
 
-async def realtime():
+async def realtime(loopl, w):
     await asyncio.sleep(0.1)
     recentRealtime = ''
 
-    while True:
-        await asyncio.sleep(0.1)
-        f = open('./buffer.txt', mode='rt', encoding='utf-8')
-        g_info = f.read()
-        if g_info != recentRealtime:
-            recentRealtime = g_info
-            for channel in realtimeList:
-                await app.send_message(app.get_channel(channel.id), recentRealtime)
+
+    #while True:
+    #    await asyncio.sleep(0.1)
+    #    f = open('./buffer.txt', mode='rt', encoding='utf-8')
+    #    g_info = f.read()
+    #    if g_info != recentRealtime:
+    #        recentRealtime = g_info
 
 
 app.run(token)
