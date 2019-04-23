@@ -25,8 +25,7 @@ async def on_ready():
 
     await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
 
-    async def on_message_live(ws, message):
-        await asyncio.sleep(0.01)
+    def on_message_live(ws, message):
         print(message)
         message = json.loads(message)
         if message["Type"] == 'UsersOnline':
@@ -43,7 +42,11 @@ async def on_ready():
             messageStr += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid);
         print(messageStr)
         for channel in realtimeList:
-            app.send_message(app.get_channel(channel.id), messageStr)
+            messageToSend = {
+                "content": messageStr
+            }
+            requests.post('https://discordapp.com/api/channels/{}/messages'.format(channel.id), params=messageToSend)
+        print("one cycle completed")
 
     def on_error_live(ws, error):
         print(error)
