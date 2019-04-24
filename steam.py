@@ -13,6 +13,7 @@ app = discord.Client()
 
 token = 'NTU1MzM5MjM2MDM1OTE5ODgy.D2p1kA.hM6p3MhaLbuJnS7H0hUeRrfG2ys'
 realtimeList = []
+realtimeQueue = []
 
 loop = asyncio.get_event_loop()
 
@@ -34,6 +35,8 @@ async def on_ready():
             return
         if message["Type"] == 'LogOn':
             return
+        if len(list(message['Apps'].keys())) < 1:
+            return
         gameid = list(message['Apps'].keys())[0]
         messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
                                                      gameid)
@@ -41,12 +44,8 @@ async def on_ready():
             packageid = list(message['Packages'].keys())[0]
             messageStr += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid);
         print(messageStr)
-        for channel in realtimeList:
-            messageToSend = {
-                "content": messageStr
-            }
-            requests.post('https://discordapp.com/api/channels/{}/messages'.format(channel.id), params=messageToSend)
-        print("one cycle completed")
+        realtimeQueue.append(messageStr)
+        print(realtimeQueue)
 
     def on_error_live(ws, error):
         print(error)
@@ -66,6 +65,8 @@ async def on_ready():
     wst = threading.Thread(target=ws.run_forever)
     wst.daemon = True
     wst.start()
+
+    loop.create_task(realtime())
 
 @app.event
 async def on_message(message):
@@ -420,17 +421,19 @@ def isNumber(s):
         return False
 
 
-async def realtime(loopl, w):
+async def realtime():
     await asyncio.sleep(0.1)
-    recentRealtime = ''
 
-
-    #while True:
-    #    await asyncio.sleep(0.1)
-    #    f = open('./buffer.txt', mode='rt', encoding='utf-8')
-    #    g_info = f.read()
-    #    if g_info != recentRealtime:
-    #        recentRealtime = g_info
+    while True:
+        await asyncio.sleep(0.1)
+        if len(realtimeQueue) < 1:
+            continue
+        recentRealtime = ''
+        for realtimeText in realtimeQueue:
+            recentRealtime += realtimeText + '\n'
+        for channel in realtimeList:
+            await app.send_message(app.get_channel(channel.id), recentRealtime)
+        realtimeQueue.clear()
 
 
 app.run(token)
