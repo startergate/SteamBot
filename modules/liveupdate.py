@@ -4,19 +4,7 @@ import websocket
 
 
 def on_message_live(ws, message):
-    print(message)
-    message = json.loads(message)
-    if message["Type"] == 'UsersOnline':
-        return
-    if message["Type"] == 'LogOff':
-        return
-    if message["Type"] == 'LogOn':
-        return
-    gameid = list(message['Apps'].keys())[0]
-    messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
-                                                     gameid)
-    f = open('../buffer.txt', mode='wt', encoding='utf-8')
-    f.write(messageStr)
+    pass
 
 
 def on_error_live(ws, error):
