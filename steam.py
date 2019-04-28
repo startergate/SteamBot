@@ -14,6 +14,7 @@ app = discord.Client()
 token = 'NTU1MzM5MjM2MDM1OTE5ODgy.D2p1kA.hM6p3MhaLbuJnS7H0hUeRrfG2ys'
 realtimeList = []
 realtimeQueue = []
+isRealtimeAlive = False;
 
 loop = asyncio.get_event_loop()
 
@@ -25,46 +26,6 @@ async def on_ready():
     print("=============")
 
     await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
-
-    def on_message_live(ws, message):
-        print(message)
-        message = json.loads(message)
-        if message["Type"] == 'UsersOnline':
-            return
-        if message["Type"] == 'LogOff':
-            return
-        if message["Type"] == 'LogOn':
-            return
-        if len(list(message['Apps'].keys())) < 1:
-            return
-        gameid = list(message['Apps'].keys())[0]
-        messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
-                                                     gameid)
-        if message['Packages'] != {}:
-            packageid = list(message['Packages'].keys())[0]
-            messageStr += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid);
-        print(messageStr)
-        realtimeQueue.append(messageStr)
-        print(realtimeQueue)
-
-    def on_error_live(ws, error):
-        print(error)
-
-    def on_close_live(ws):
-        print("### closed ###")
-
-    def on_open_live(ws):
-        pass
-
-    websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("wss://steamdb.info/api/realtime/",
-                                 on_message=on_message_live,
-                                 on_error=on_error_live,
-                                 on_close=on_close_live)
-    ws.on_open = on_open_live
-    wst = threading.Thread(target=ws.run_forever)
-    wst.daemon = True
-    wst.start()
 
     loop.create_task(realtime())
 
@@ -84,6 +45,7 @@ async def on_message(message):
     elif msg[0] == "st!game":
         if len(msg) == 1:
             await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
+            print(list(message.server.members)[0].name)
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
@@ -390,6 +352,50 @@ async def on_message(message):
             await app.send_message(message.channel, embed=em)
 
 
+def on_message_live(ws, message):
+    print(message)
+    message = json.loads(message)
+    if message["Type"] == 'UsersOnline':
+        return
+    if message["Type"] == 'LogOff':
+        return
+    if message["Type"] == 'LogOn':
+        return
+    if len(list(message['Apps'].keys())) < 1:
+        return
+    gameid = list(message['Apps'].keys())[0]
+    messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
+                                                     gameid)
+    if message['Packages'] != {}:
+        packageid = list(message['Packages'].keys())[0]
+        messageStr += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid);
+    print(messageStr)
+    realtimeQueue.append(messageStr)
+    print(realtimeQueue)
+
+def on_error_live(ws, error):
+    print(error)
+
+def on_close_live(ws):
+    print("### closed ###")
+    global isRealtimeAlive
+    isRealtimeAlive = False
+    wst.join()
+
+def on_open_live(ws):
+    global isRealtimeAlive
+    isRealtimeAlive = True
+
+websocket.enableTrace(True)
+ws = websocket.WebSocketApp("wss://steamdb.info/api/realtime/",
+                                 on_message=on_message_live,
+                                 on_error=on_error_live,
+                                 on_close=on_close_live)
+ws.on_open = on_open_live
+wst = threading.Thread(target=ws.run_forever)
+wst.daemon = True
+
+
 def get_steam_id(name, want_all=False):
     xmls = requests.get('https://steamcommunity.com/id/{}/?xml=1'.format(name)).text
     xmls = et.fromstring(xmls)
@@ -422,10 +428,16 @@ def isNumber(s):
 
 
 async def realtime():
+    global isRealtimeAlive, realtimeQueue
     await asyncio.sleep(0.1)
 
     while True:
         await asyncio.sleep(0.1)
+        if not isRealtimeAlive:
+            try:
+               wst.start()
+            except RuntimeError:
+                pass
         if len(realtimeQueue) < 1:
             continue
         recentRealtime = ''
