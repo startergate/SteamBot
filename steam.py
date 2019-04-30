@@ -48,7 +48,24 @@ async def on_message(message):
     elif msg[0] == "st!game":
         if len(msg) == 1:
             await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
-            print(list(message.server.members)[0].name)
+        elif msg[1] == 'search':
+            if len(msg) < 3:
+                await app.send_message(message.channel, ":x: 검색어를 입력해주세요!.")
+
+            query = message.content.replace('st!game search ', '')
+            src = requests.get('https://store.steampowered.com/search/?term={}'.format(query.lower().replace(' ', '+'))).text
+            src = BeautifulSoup(src, 'html.parser')
+            games = src.find_all('a', class_='search_result_row')
+            if not games:
+                await app.send_message(message.channel, ":x: 게임을 전혀 찾을 수 없었어요.")
+                return
+            em = discord.Embed(title='{}을 검색한 결과', description='{}개의 게임을 찾았어요!'.format(len(games)))
+            for game in games:
+                price = game.find('div', class_='search_price').getText().strip();
+                temp = price.split('₩')
+                if len(temp) >= 3:
+                    price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
+                em.add_field(name=game.find('span', class_='title').getText(), value=price)
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
