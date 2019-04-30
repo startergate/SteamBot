@@ -51,6 +51,7 @@ async def on_message(message):
         elif msg[1] == 'search':
             if len(msg) < 3:
                 await app.send_message(message.channel, ":x: 검색어를 입력해주세요!.")
+                return
 
             query = message.content.replace('st!game search ', '')
             src = requests.get('https://store.steampowered.com/search/?term={}'.format(query.lower().replace(' ', '+'))).text
@@ -59,13 +60,16 @@ async def on_message(message):
             if not games:
                 await app.send_message(message.channel, ":x: 게임을 전혀 찾을 수 없었어요.")
                 return
-            em = discord.Embed(title='{}을 검색한 결과', description='{}개의 게임을 찾았어요!'.format(len(games)))
+            # em = discord.Embed(title='"{}"을 검색한 결과'.format(query), description='{}개의 게임을 찾았어요!'.format(len(games)))
+            output_text = ''
             for game in games:
                 price = game.find('div', class_='search_price').getText().strip();
                 temp = price.split('₩')
                 if len(temp) >= 3:
                     price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
-                em.add_field(name=game.find('span', class_='title').getText(), value=price)
+                output_text += '\n' + game.find('span', class_='title').getText() + '  |  ' + price
+            em = discord.Embed(title='"{}"을 검색한 결과, {}개의 게임을 찾았어요!'.format(query, len(games)), description=output_text, colour=discord.Colour(0x1b2838))
+            await app.send_message(message.channel, embed=em)
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
