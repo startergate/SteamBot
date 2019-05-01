@@ -11,6 +11,7 @@ class Help:
         return em
 
     def getSpecificHelp(self, select):
+        command_list = ['help', 'add', 'game', 'user']
         if select == 'game':
             em = discord.Embed(title='SteamBot - st!game',
                                description='st!game에 대한 도움말이에요!\n[] => 비 필수 사항이고, 안에 있는 단어 중 하나를 선택해서 입력해주세요.\n() => 필수 사항이고, 위치에 맞는 형태로 입력해주세요.',
@@ -30,6 +31,9 @@ class Help:
             em.add_field(name='st!user recent ( username )', value='`username` 자리에 입력한 유저가 최근 2주간 플레이한 게임을 가져와요.', inline=False)
             em.add_field(name='st!user library ( username ) ', value='`username` 자리에 입력한 유저의 라이브러리를 10개 가져와요. 명령어 뒤에 숫자를 붙이면 입력한 만큼 가져와요. (최대 25개)', inline=False)
             em.add_field(name='st!user wishlist ( username )', value='`username` 자리에 입력한 유저의 찜 목록를 10개 가져와요. 명령어 뒤에 숫자를 붙이면 입력한 만큼 가져와요. (최대 50개)', inline=False)
+            return em
+        elif select in command_list:
+            em = discord.Embed(title='SteamBot - 상세 도움말이 없는 명령어', description='그 명령어는 상세 도움말이 없어요.', colour=discord.Colour(0x1b2838))
             return em
         else:
             em = discord.Embed(title='SteamBot - 없는 명령어', description='그런 명령어는 없어요.', colour=discord.Colour(0x1b2838))
