@@ -8,6 +8,7 @@ from markdownify import markdownify as md
 import json
 import websocket
 import threading
+from modules.help import Help
 
 app = discord.Client()
 
@@ -35,14 +36,9 @@ async def on_message(message):
         return None
     msg = message.content.split(' ')
     if msg[0] == "st!help":
-        em = discord.Embed(title='SteamBot', description='스팀봇을 사용해주셔서 감사합니다!', colour=discord.Colour(0x1b2838))
-        em.add_field(name='st!help', value='도움! 무슨 명령어를 써야할지 모를 때 「도움!」을 외쳐주세요!', inline=False)
-        em.add_field(name='st!add', value='스팀 봇 추가 링크를 가져와요.', inline=False)
-        em.add_field(name='st!game', value='new | 스팀 최근 출시 제품들을 가져와요.\nspecials | 스팀 인기 할인 제품들을 가져와요.\nbestseller | 스팀 최고 인기 제품을 가져와요.\nbestseller [ new, oncoming ] | 스팀 인기 제품을 가져와요. 각각 신제품, 출시 예정 제품이에요.\nhot | 스팀 최다 플레이 중인 게임을 가져와요.\nhot ( count ) | 스팀 최다 플레이 중인 게임을 `count` 자리에 입력한 만큼 가져와요. (최대 25개)\nsearch ( query ) | `query` 자리에 입력한 문장으로 스팀을 검색해요.\nrealtime | 해당 채널로 스팀 실시간 업데이트를 가져와요.\nrealtime stop | 스팀 실시간 업데이트 수신을 중지해요.', inline=False)
-        em.add_field(name='st!user', value='profile ( username ) | `username` 자리에 입력한 유저의 프로필을 가져와요.\nrecent ( username ) | `username` 자리에 입력한 유저가 최근 2주간 플레이한 게임을 가져와요.\nlibrary ( username ) | `username` 자리에 입력한 유저의 라이브러리를 10개 가져와요.\nlibrary ( username ) ( count ) | `username` 자리에 입력한 유저의 라이브러리를 count 자리에 입력한 만큼 가져와요. (최대 25개)\nwishlist ( username ) | `username` 자리에 입력한 유저의 찜 목록를 10개 가져와요.\nwishlist ( username ) ( count ) | `username` 자리에 입력한 유저의 찜 목록를 `count` 자리에 입력한 만큼 가져와요. (최대 50개)', inline=False)
-        await app.send_message(message.channel, embed=em)
+        await app.send_message(message.channel, embed=Help.getHelp())
         if len(msg) > 1:
-            await app.send_message(message.channel, "help 명령어는 st!help만 쓰셔도 쓸 수 있어요!")
+            await app.send_message(message.channel, embed=Help.getSpecificHelp(msg[1]))
     if msg[0] == 'st!add':
         await app.send_message(message.channel, "아래 링크로 들어가서 SteamBot을 서버에 추가할 수 있어요!\n```https://discordapp.com/oauth2/authorize?client_id=555339236035919882&permissions=0&scope=bot```")
     elif msg[0] == "st!game":
