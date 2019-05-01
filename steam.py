@@ -66,7 +66,9 @@ async def on_message(message):
                 price = game.find('div', class_='search_price').getText().strip();
                 temp = price.split('₩')
                 if len(temp) >= 3:
-                    price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
+                    price = '₩ {} ~~₩ {}~~ ({})'.format(temp[2], temp[1], game.find('div', class_='search_discount').find('span').text)
+                if not price:
+                    price = '기록 없음'
                 output_text += '\n' + game.find('span', class_='title').getText() + '  |  ' + price
             em = discord.Embed(title='"{}"을 검색한 결과, {}개의 게임을 찾았어요!'.format(query, len(games)), description=output_text, colour=discord.Colour(0x1b2838))
             await app.send_message(message.channel, embed=em)
@@ -82,7 +84,7 @@ async def on_message(message):
                     temp = price.split('₩')
                     if len(temp) >= 3:
                         price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
-                    output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
+                    output_text += '\n' + product.find('span', class_='title').getText() + ' | ' + price
 
                 em = discord.Embed(title='스팀 최고 판매 제품', description=output_text, colour=discord.Colour(0x1b2838))
                 await app.send_message(message.channel, embed=em)
