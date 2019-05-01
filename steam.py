@@ -36,9 +36,11 @@ async def on_message(message):
         return None
     msg = message.content.split(' ')
     if msg[0] == "st!help":
-        await app.send_message(message.channel, embed=Help.getHelp())
-        if len(msg) > 1:
-            await app.send_message(message.channel, embed=Help.getSpecificHelp(msg[1]))
+        help = Help()
+        if len(msg) == 1:
+            await app.send_message(message.channel, embed=help.getHelp())
+        else:
+            await app.send_message(message.channel, embed=help.getSpecificHelp(msg[1]))
     if msg[0] == 'st!add':
         await app.send_message(message.channel, "아래 링크로 들어가서 SteamBot을 서버에 추가할 수 있어요!\n```https://discordapp.com/oauth2/authorize?client_id=555339236035919882&permissions=0&scope=bot```")
     elif msg[0] == "st!game":
