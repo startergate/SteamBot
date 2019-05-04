@@ -29,7 +29,7 @@ class Help:
                                colour=discord.Colour(0x1b2838))
             em.add_field(name='st!user profile ( username )', value='`username` 자리에 입력한 유저의 프로필을 가져와요.', inline=False)
             em.add_field(name='st!user recent ( username )', value='`username` 자리에 입력한 유저가 최근 2주간 플레이한 게임을 가져와요.', inline=False)
-            em.add_field(name='st!user library ( username ) ', value='`username` 자리에 입력한 유저의 라이브러리를 10개 가져와요. 명령어 뒤에 숫자를 붙이면 입력한 만큼 가져와요. (최대 25개)', inline=False)
+            em.add_field(name='st!user library ( username ) ', value='`username` 자리에 입력한 유저의 라이브러리를 10개 가져와요. 명령어 뒤에 숫자를 붙이면 입력한 만큼 가져와요. (최대 25개) 명령어 뒤에 `random`을 붙이면 랜덤한 한 게임을 가져와요.', inline=False)
             em.add_field(name='st!user wishlist ( username )', value='`username` 자리에 입력한 유저의 찜 목록를 10개 가져와요. 명령어 뒤에 숫자를 붙이면 입력한 만큼 가져와요. (최대 50개)', inline=False)
             return em
         elif select in command_list:
