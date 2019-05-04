@@ -294,7 +294,7 @@ async def on_message(message):
                             playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
                             if 'playtime_2weeks' in game:
                                 playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
-                            em = discord.Embed(title='{} ({})'.format(game['name'], game['appid']), description=playtime)
+                            em = discord.Embed(title='{} ({})'.format(game['name'], game['appid']), description='{}\n플레이: steam://run/{}/'.format(playtime, game['appid']))
                             await app.send_message(message.channel, embed=em)
                             return
                         await app.send_message(message.channel, ":x: 게임 갯수는 정수를 사용해주세요.")
@@ -317,7 +317,7 @@ async def on_message(message):
                         playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
 
                     em.add_field(name='{} ({})'.format(game['name'], game['appid']),
-                                 value=playtime, inline=False)
+                                 value='{}\n플레이: steam://run/{}/'.format(playtime, game['appid']), inline=False)
                     i += 1
                 await app.send_message(message.channel, embed=em)
         elif msg[1] == 'wishlist':
