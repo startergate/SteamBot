@@ -8,6 +8,7 @@ from markdownify import markdownify as md
 import json
 import websocket
 import threading
+import random
 from modules.help import Help
 
 app = discord.Client()
@@ -58,7 +59,6 @@ async def on_message(message):
             if not games:
                 await app.send_message(message.channel, ":x: 게임을 전혀 찾을 수 없었어요.")
                 return
-            # em = discord.Embed(title='"{}"을 검색한 결과'.format(query), description='{}개의 게임을 찾았어요!'.format(len(games)))
             output_text = ''
             for game in games:
                 price = game.find('div', class_='search_price').getText().strip();
@@ -289,6 +289,14 @@ async def on_message(message):
                     try:
                         requested_length = int(msg[3])
                     except ValueError:
+                        if msg[3] == 'random':
+                            game = random.choice(games)
+                            playtime = '평생 {} 시간 플레이 함'.format('%.2f' % (game['playtime_forever'] / 60))
+                            if 'playtime_2weeks' in game:
+                                playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
+                            em = discord.Embed(title='{} ({})'.format(game['name'], game['appid']), description=playtime)
+                            await app.send_message(message.channel, embed=em)
+                            return
                         await app.send_message(message.channel, ":x: 게임 갯수는 정수를 사용해주세요.")
                         return
                 else:
