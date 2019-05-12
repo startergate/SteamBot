@@ -13,7 +13,7 @@ from modules.help import Help
 
 app = discord.Client()
 
-token = 'NTU1MzM5MjM2MDM1OTE5ODgy.D2p1kA.hM6p3MhaLbuJnS7H0hUeRrfG2ys'
+token = 'ㅅㅂ'
 realtimeList = []
 realtimeQueue = []
 isRealtimeAlive = False;
@@ -460,7 +460,7 @@ def isNumber(s):
 
 
 async def realtime():
-    global isRealtimeAlive, realtimeQueue
+    global isRealtimeAlive, realtimeQueue, wst
     await asyncio.sleep(0.1)
 
     while True:
