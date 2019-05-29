@@ -67,3 +67,4 @@ fabric.properties
 
 env/
 *.pyc
+modules/__pycache__
