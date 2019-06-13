@@ -3,15 +3,16 @@ import asyncio
 import discord
 import requests
 from bs4 import BeautifulSoup
-import xml.etree.ElementTree as et
 from markdownify import markdownify as md
 import random
 from modules.help import Help
 from modules.liveupdate import *
+from modules.steamapi import *
 
 app = discord.Client()
+help = Help()
 
-token = 'ㅅㅂ'
+token = 'NTU1MzM5MjM2MDM1OTE5ODgy.XNgFZQ.tcaiQqr4ZIBy9EFoz1cUOmG1jIo'
 
 loop = asyncio.get_event_loop()
 
@@ -37,10 +38,11 @@ async def on_message(message):
         else:
             await app.send_message(message.channel, embed=help.getSpecificHelp(msg[1]))
     if msg[0] == 'st!add':
-        await app.send_message(message.channel, "아래 링크로 들어가서 SteamBot을 서버에 추가할 수 있어요!\n```https://discordapp.com/oauth2/authorize?client_id=555339236035919882&permissions=0&scope=bot```")
+        await app.send_message(message.channel, "아래 링크로 들어가서 SteamBot을 서버에 추가할 수 있어요!\n`https://discordapp.com/oauth2/authorize?client_id=555339236035919882&permissions=0&scope=bot`")
     elif msg[0] == "st!game":
         if len(msg) == 1:
             await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
+            await app.send_message(message.channel, embed=help.getSpecificHelp("game"))
         elif msg[1] == 'search':
             if len(msg) < 3:
                 await app.send_message(message.channel, ":x: 검색어를 입력해주세요!.")
@@ -234,6 +236,7 @@ async def on_message(message):
     elif msg[0] == "st!user":
         if len(msg) == 1:
             await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
+            await app.send_message(message.channel, embed=help.getSpecificHelp("user"))
         elif msg[1] == 'recent':
             if len(msg) == 2:
                 await app.send_message(message.channel, ":x: 스팀 아이디를 입력해주세요!.")
