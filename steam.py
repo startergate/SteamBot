@@ -12,7 +12,7 @@ from modules.steamapi import *
 app = discord.Client()
 help = Help()
 
-token = 'NTU1MzM5MjM2MDM1OTE5ODgy.XNgFZQ.tcaiQqr4ZIBy9EFoz1cUOmG1jIo'
+token = ''
 
 loop = asyncio.get_event_loop()
 
