@@ -5,3 +5,5 @@ SteamBot is discord bot that has many features including getting your recent pla
 SteamBot is in development
 
 Based on discord.py v0.16.12
+
+TODO:: ENFORCE SECURITY
