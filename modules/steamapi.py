@@ -2,6 +2,7 @@ import requests
 import xml.etree.ElementTree as et
 from bs4 import BeautifulSoup
 
+
 def get_steam_id(name, want_all=False):
     xmls = requests.get('https://steamcommunity.com/id/{}/?xml=1'.format(name)).text
     xmls = et.fromstring(xmls)

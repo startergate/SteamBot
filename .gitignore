@@ -69,3 +69,5 @@ env/
 venv/
 *.pyc
 modules/__pycache__
+modules/setting.py
+*.pyc

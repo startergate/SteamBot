@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
+# https://discordapp.com/oauth2/authorize?client_id=555339236035919882&scope=bot&permissions=67584
 import asyncio
 import discord
 import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
-import random
 from modules.help import Help
 from modules.liveupdate import *
 from modules.steamapi import *
+import modules.setting
 
 app = discord.Client()
 help = Help()
 
-token = ''
+token = modules.setting.token
 
 loop = asyncio.get_event_loop()
+
 
 @app.event
 async def on_ready():
@@ -26,6 +28,7 @@ async def on_ready():
     await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
 
     loop.create_task(realtime())
+
 
 @app.event
 async def on_message(message):
