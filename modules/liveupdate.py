@@ -8,7 +8,6 @@ isRealtimeAlive = False
 
 
 def on_message_live(ws, message):
-    print(message)
     message = json.loads(message)
     if message["Type"] == 'UsersOnline':
         return
