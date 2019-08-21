@@ -2,6 +2,7 @@
 # https://discordapp.com/oauth2/authorize?client_id=555339236035919882&scope=bot&permissions=67584
 import asyncio
 import discord
+import random
 import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
