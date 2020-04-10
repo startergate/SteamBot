@@ -68,6 +68,5 @@ fabric.properties
 env/
 venv/
 *.pyc
-modules/__pycache__
+*/__pycache__
 modules/setting.py
-*.pyc
