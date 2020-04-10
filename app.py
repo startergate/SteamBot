@@ -100,7 +100,7 @@ async def on_message(message):
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
                 bst_seller = bestseller_src.find('div', id='tab_newreleases_content')
                 bst_seller = bst_seller.find_all('a', class_='tab_item')
-                output_text = '스팀의 신제품 최고 판매 제품 목록이에요.'
+                output_text = '스팀의 신제품 최고 판매 목록이에요.'
                 previous_title = ''
                 for product in bst_seller:
                     if previous_title == product.find('div', class_='tab_item_name').getText():
