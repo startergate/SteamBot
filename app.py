@@ -34,16 +34,22 @@ async def on_ready():
 async def on_message(message):
     if message.author.bot:
         return None
+
+    if message.content.startwith('st!'):
+        message.content = message.content.replace('st!', '', 1)
+    else:
+        return None
+
     msg = message.content.split(' ')
-    if msg[0] == "st!help":
+    if msg[0] == "help":
         if len(msg) == 1:
             await app.send_message(message.channel, embed=help.getHelp())
         else:
             await app.send_message(message.channel, embed=help.getSpecificHelp(msg[1]))
-    if msg[0] == 'st!add':
+    if msg[0] == 'add':
         await app.send_message(message.channel,
                                "아래 링크로 들어가서 SteamBot을 서버에 추가할 수 있어요!\n`https://discordapp.com/api/oauth2/authorize?client_id=555339236035919882&permissions=2048&scope=bot`")
-    elif msg[0] == "st!game":
+    elif msg[0] == "game":
         if len(msg) == 1:
             await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
             await app.send_message(message.channel, embed=help.getSpecificHelp("game"))
@@ -58,11 +64,11 @@ async def on_message(message):
             src = BeautifulSoup(src, 'html.parser')
             games = src.find_all('a', class_='search_result_row')
             if not games:
-                await app.send_message(message.channel, ":x: 게임을 전혀 찾을 수 없었어요.")
+                await app.send_message(message.channel, ":x: 게임을 찾지 못했어요.")
                 return
             output_text = ''
             for game in games:
-                price = game.find('div', class_='search_price').getText().strip();
+                price = game.find('div', class_='search_price').getText().strip()
                 temp = price.split('₩')
                 if len(temp) >= 3:
                     price = '₩ {} ~~₩ {}~~ ({})'.format(temp[2], temp[1],
@@ -249,7 +255,7 @@ async def on_message(message):
                 return
             realtimeList.append(message.channel)
             await app.send_message(message.channel, ':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
-    elif msg[0] == "st!user":
+    elif msg[0] == "user":
         if len(msg) == 1:
             await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
             await app.send_message(message.channel, embed=help.getSpecificHelp("user"))
