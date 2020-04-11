@@ -35,7 +35,7 @@ async def on_message(message):
     if message.author.bot:
         return None
 
-    if message.content.startwith('st!'):
+    if message.content.startswith('st!'):
         message.content = message.content.replace('st!', '', 1)
     else:
         return None
