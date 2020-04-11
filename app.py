@@ -3,8 +3,6 @@
 import asyncio
 import discord
 import random
-import requests
-from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 from modules.help import Help
 from modules.liveupdate import *
