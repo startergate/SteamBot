@@ -71,3 +71,5 @@ venv/
 */__pycache__
 modules/setting.py
 .idea/
+
+.env
