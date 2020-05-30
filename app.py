@@ -1,20 +1,26 @@
 # -*- coding: utf-8 -*-
 # https://discordapp.com/oauth2/authorize?client_id=555339236035919882&scope=bot&permissions=67584
 import asyncio
-import discord
+import os
 import random
+
+import discord
+from dotenv import load_dotenv
 from markdownify import markdownify as md
+
+load_dotenv()
+
 from modules.help import Help
 from modules.liveupdate import *
 from modules.steamapi import *
-import modules.setting
 
 app = discord.Client()
 help = Help()
 
-token = modules.setting.token
+token = os.getenv('token')
 
 loop = asyncio.get_event_loop()
+
 
 @app.event
 async def on_ready():
@@ -23,7 +29,7 @@ async def on_ready():
     print(app.user.id)
     print("=============")
 
-    await app.change_presence(game=discord.Game(name="도움말을 받으려면 st!help ", type=1))
+    await app.change_presence(activity=discord.Activity(name="도움말을 받으려면 st!help ", type=1))
 
     loop.create_task(realtime())
 
