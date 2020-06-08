@@ -17,14 +17,14 @@ def on_message_live(ws, message):
         return
     if len(list(message['Apps'].keys())) < 1:
         return
-    gameid = list(message['Apps'].keys())[0]
-    messageStr = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][gameid],
-                                                 gameid)
+    game_id = list(message['Apps'].keys())[0]
+    message_str = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][game_id],
+                                                 game_id)
     if message['Packages'] != {}:
         packageid = list(message['Packages'].keys())[0]
-        messageStr += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid);
-    print(messageStr)
-    realtimeQueue.append(messageStr)
+        message_str += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid)
+    print(message_str)
+    realtimeQueue.append(message_str)
     print(realtimeQueue)
 
 
