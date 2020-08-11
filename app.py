@@ -14,28 +14,31 @@ from modules.steamapi import *
 
 load_dotenv()
 
-app = discord.Client()
+client = discord.Client()
 help = Help()
 
 token = os.getenv('token')
+steam_api_key = os.getenv('steam_api_key')
+invite = os.getenv('invite')
 
 loop = asyncio.get_event_loop()
 
 
-@app.event
+
+@client.event
 async def on_ready():
     print("로그인 정보>")
-    print(app.user.name)
-    print(app.user.id)
+    print(client.user.name)
+    print(client.user.id)
     print("=============")
 
-    await app.change_presence(activity=discord.Activity(name="도움말을 받으려면 st!help ", type=1))
+    await client.change_presence(activity=discord.Activity(name="도움말을 받으려면 st!help ", type=1))
 
     loop.create_task(realtime())
 
 
-@app.event
-async def on_message(message):
+@client.event
+async def on_message(message: discord.Message):
     if message.author.bot:
         return None
 
@@ -47,19 +50,18 @@ async def on_message(message):
     msg = message.content.split(' ')
     if msg[0] == "help":
         if len(msg) == 1:
-            await app.send_message(message.channel, embed=help.getHelp())
+            await message.channel.send(embed=help.getHelp())
         else:
-            await app.send_message(message.channel, embed=help.getSpecificHelp(msg[1]))
+            await message.channel.send(embed=help.getSpecificHelp(msg[1]))
     if msg[0] == 'add':
-        await app.send_message(message.channel,
-                               "아래 링크로 들어가서 SteamBot을 서버에 추가할 수 있어요!\n`https://discordapp.com/api/oauth2/authorize?client_id=555339236035919882&permissions=2048&scope=bot`")
+        await message.channel.send(f"아래 링크로 들어가서 SteamBot을 서버에 추가할 수 있어요!\n`{invite}`")
     elif msg[0] == "game":
         if len(msg) == 1:
-            await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
-            await app.send_message(message.channel, embed=help.getSpecificHelp("game"))
+            await message.channel.send(":x: 명령어를 제대로 입력해주세요!.")
+            await message.channel.send(embed=help.getSpecificHelp("game"))
         elif msg[1] == 'search':
             if len(msg) < 3:
-                await app.send_message(message.channel, ":x: 검색어를 입력해주세요!.")
+                await message.channel.send(":x: 검색어를 입력해주세요!.")
                 return
 
             query = message.content.replace('st!game search ', '')
@@ -68,7 +70,7 @@ async def on_message(message):
             src = BeautifulSoup(src, 'html.parser')
             games = src.find_all('a', class_='search_result_row')
             if not games:
-                await app.send_message(message.channel, ":x: 게임을 찾지 못했어요.")
+                await message.channel.send(":x: 게임을 찾지 못했어요.")
                 return
             output_text = ''
             for game in games:
@@ -82,7 +84,7 @@ async def on_message(message):
                 output_text += '\n' + game.find('span', class_='title').getText() + '  |  ' + price
             em = discord.Embed(title='"{}"을 검색한 결과, {}개의 게임을 찾았어요!'.format(query, len(games)), description=output_text,
                                colour=discord.Colour(0x1b2838))
-            await app.send_message(message.channel, embed=em)
+            await message.channel.send(embed=em)
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
                 bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
@@ -91,14 +93,14 @@ async def on_message(message):
 
                 output_text = '스팀의 최고 판매 제품 목록이에요.'
                 for product in bst_seller:
-                    price = product.find('div', class_='search_price').getText().strip();
+                    price = product.find('div', class_='search_price').getText().strip()
                     temp = price.split('₩')
                     if len(temp) >= 3:
                         price = '₩ ' + temp[2] + ' ~~₩ ' + temp[1] + '~~'
                     output_text += '\n' + product.find('span', class_='title').getText() + ' | ' + price
 
                 em = discord.Embed(title='스팀 최고 판매 제품', description=output_text, colour=discord.Colour(0x1b2838))
-                await app.send_message(message.channel, embed=em)
+                await message.channel.send(embed=em)
             elif msg[2] == 'new':
                 bestseller_src = requests.get('https://store.steampowered.com/explore/new/')
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
@@ -110,7 +112,7 @@ async def on_message(message):
                     if previous_title == product.find('div', class_='tab_item_name').getText():
                         continue
                     previous_title = product.find('div', class_='tab_item_name').getText()
-                    if (product.find('div', class_='discount_final_price')):
+                    if product.find('div', class_='discount_final_price'):
                         price = product.find('div', class_='discount_final_price').getText().strip()
                     else:
                         price = '기록 없음'
@@ -119,7 +121,7 @@ async def on_message(message):
                     output_text += '\n' + product.find('div', class_='tab_item_name').getText() + ' | ' + price
 
                 em = discord.Embed(title='스팀 최고 판매 제품', description=output_text, colour=discord.Colour(0x1b2838))
-                await app.send_message(message.channel, embed=em)
+                await message.channel.send(embed=em)
             elif msg[2] == 'oncoming':
                 bestseller_src = requests.get('https://store.steampowered.com/explore/upcoming/')
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
@@ -142,7 +144,7 @@ async def on_message(message):
                     output_text += '\n' + product.find('div', class_='tab_item_name').getText() + price
 
                 em = discord.Embed(title='스팀 최고 인기 출시 예정 제품', description=output_text, colour=discord.Colour(0x1b2838))
-                await app.send_message(message.channel, embed=em)
+                await message.channel.send(embed=em)
         elif msg[1] == 'new':
             new_src = requests.get('https://store.steampowered.com/search/?sort_by=Released_DESC')
             new_src = BeautifulSoup(new_src.text, 'html.parser')
@@ -160,7 +162,7 @@ async def on_message(message):
                 output_text += '\n{}  |  {}'.format(product.find('span', class_='title').getText(), price)
 
             em = discord.Embed(title='스팀 최신 출시 제품', description=output_text, colour=discord.Colour(0x1b2838))
-            await app.send_message(message.channel, embed=em)
+            await message.channel.send(embed=em)
         elif msg[1] == 'specials':
             new_src = requests.get('https://store.steampowered.com/search/?specials=1')
             new_src = BeautifulSoup(new_src.text, 'html.parser')
@@ -178,13 +180,13 @@ async def on_message(message):
                 output_text += '\n' + product.find('span', class_='title').getText() + '  |  ' + price
 
             em = discord.Embed(title='스팀 인기 할인 제품', description=output_text, colour=discord.Colour(0x1b2838))
-            await app.send_message(message.channel, embed=em)
+            await message.channel.send(embed=em)
         elif msg[1] == 'hot':
             if len(msg) > 2:
                 try:
                     requested_length = int(msg[3])
                 except ValueError:
-                    await app.send_message(message.channel, ":x: 게임 갯수는 정수를 사용해주세요.")
+                    await message.channel.send(":x: 게임 갯수는 정수를 사용해주세요.")
                     return
             else:
                 requested_length = 10
@@ -212,19 +214,19 @@ async def on_message(message):
 
                 i += 1
 
-            await app.send_message(message.channel, embed=em)
+            await message.channel(embed=em)
         elif msg[1] == 'news':
             if len(msg) > 2:
                 requested_length = 10
                 halflife3 = ['halflife 3', 'hl3', 'halflife3', 'hl 3']
-                if (message.content.replace('st!game news ', '').lower() in halflife3):
-                    await app.send_message(message.channel, ':x: 이미 뒤진 게임이에요.')
+                if message.content.replace('st!game news ', '').lower() in halflife3:
+                    await message.channel.send(':x: 이미 뒤진 게임이에요.')
                     return
                 id = get_game_id(message.content.replace('st!game news ', ''))
                 if id == {}:
-                    await app.send_message(message.channel, ':x: 게임을 찾을 수 없어요.')
+                    await message.channel.send(':x: 게임을 찾을 수 없어요.')
                     return
-                await app.send_message(message.channel, ":white_check_mark: 로딩 중 입니다.")
+                await message.channel.send(":white_check_mark: 로딩 중 입니다.")
                 keys = list(id.keys())
                 news_src = requests.get(
                     'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=300&format=json'.format(
@@ -242,48 +244,48 @@ async def on_message(message):
                     em.add_field(name='{} - {}'.format(news['feedlabel'], news['title']),
                                  value=md(news['contents']) + ' **[자세히 보기]({})**'.format(news['url']))
                     i += 1
-                await app.send_message(message.channel, embed=em)
+                await message.channel.send(embed=em)
             else:
-                await app.send_message(message.channel, ':x: 게임 이름을 입력해주세요.')
+                await message.channel.send(':x: 게임 이름을 입력해주세요.')
         elif msg[1] == 'realtime':
             if len(msg) > 2:
                 if msg[2] == 'stop':
                     if message.channel not in realtimeList:
-                        await app.send_message(message.channel, ':x: 등록되지 않은 채널이에요!')
+                        await message.channel.send(':x: 등록되지 않은 채널이에요!')
                         return
                     realtimeList.remove(message.channel)
-                    await app.send_message(message.channel, ':white_check_mark: 스팀 실시간 업데이트 수신을 중지했어요!')
+                    await message.channel.send(':white_check_mark: 스팀 실시간 업데이트 수신을 중지했어요!')
                     return
             if message.channel in realtimeList:
-                await app.send_message(message.channel, ':x: 이미 등록된 채널이에요!')
+                await message.channel.send(':x: 이미 등록된 채널이에요!')
                 return
             realtimeList.append(message.channel)
-            await app.send_message(message.channel, ':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
+            await message.channel.send(':white_check_mark: 지금부터 이 채널에서 스팀 실시간 업데이트를 받을 수 있어요!')
     elif msg[0] == "user":
         if len(msg) == 1:
-            await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
-            await app.send_message(message.channel, embed=help.getSpecificHelp("user"))
+            await message.channel.send(":x: 명령어를 제대로 입력해주세요!.")
+            await message.channel.send(embed=help.getSpecificHelp("user"))
         elif msg[1] == 'recent':
             if len(msg) == 2:
-                await app.send_message(message.channel, ":x: 스팀 아이디를 입력해주세요!.")
+                await message.channel.send(":x: 스팀 아이디를 입력해주세요!.")
             elif len(msg) == 3:
                 steamid = get_steam_id(msg[2])
                 if steamid == 0:
-                    await app.send_message(message.channel, ":x: 유효한 스팀 아이디를 사용해주세요.")
+                    await message.channel.send(":x: 유효한 스팀 아이디를 사용해주세요.")
                     return
                 recents = requests.get(
-                    'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid={}&format=json'.format(
-                        steamid))
+                    'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={}&steamid={}&format=json'.format(steam_api_key, steamid))
                 recents = recents.json()
                 if recents['response']['total_count'] == 0:
-                    await app.send_message(message.channel,
-                                           ':frowning: 어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
+                    await message.channel.send(
+                        ':frowning: 어떠한 게임도 불러오지 못했어요. 아무런 게임도 플레이하지 않으셨을수도 있고, 스팀 프로필이 비공개일수도 있어요.')
                     return
                 em = discord.Embed(title='{} 님이 최근에 플레이하신 게임 목록이에요.'.format(msg[2]),
                                    description='지난 2주간 {}개의 게임을 플레이하셨어요.'.format(recents['response']['total_count']),
                                    colour=discord.Colour(0x1b2838))
                 total_time = 0
                 for text in recents['response']['games']:
+                    print(text)
                     total_time += text['playtime_2weeks']
                     em.add_field(name='{} ({})'.format(text['name'], text['appid']),
                                  value='지난 2주간 {} 시간동안 플레이 함\n평생 동안 {} 시간동안 플레이 함'.format(
@@ -291,19 +293,19 @@ async def on_message(message):
                                  inline=False)
                 em.add_field(name='총 플레이 시간',
                              value=msg[2] + '님은 지난 2주간 {} 시간동안 플레이하셨어요!'.format("%.2f" % (total_time / 60)))
-                await app.send_message(message.channel, embed=em)
+                await message.channel.send(embed=em)
             else:
-                await app.send_message(message.channel, ":x: ID를 입력해주세요.")
+                await message.channel.send(":x: ID를 입력해주세요.")
         elif msg[1] == 'library':
             if len(msg) == 1:
-                await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
+                await message.channel.send(":x: 명령어를 제대로 입력해주세요!.")
             else:
                 if len(msg) == 2:
-                    await app.send_message(message.channel, ":x: 스팀 아이디를 입력해주세요!.")
+                    await message.channel.send(":x: 스팀 아이디를 입력해주세요!.")
                     return
                 steamid = get_steam_id(msg[2])
                 if steamid == 0:
-                    await app.send_message(message.channel, ":x: 유효한 스팀 아이디를 사용해주세요.")
+                    await message.channel.send(":x: 유효한 스팀 아이디를 사용해주세요.")
                     return
                 userlib = requests.get(
                     'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid={}&include_appinfo=1&format=json'.format(
@@ -322,9 +324,9 @@ async def on_message(message):
                                 playtime += '\n지난 2주 간 {} 시간 플레이 함'.format('%.2f' % (game['playtime_2weeks'] / 60))
                             em = discord.Embed(title='{} ({})'.format(game['name'], game['appid']),
                                                description='{}\n플레이: steam://run/{}/'.format(playtime, game['appid']))
-                            await app.send_message(message.channel, embed=em)
+                            await message.channel.send(embed=em)
                             return
-                        await app.send_message(message.channel, ":x: 게임 갯수는 정수를 사용해주세요.")
+                        await message.channel.send(":x: 게임 갯수는 정수를 사용해주세요.")
                         return
                 else:
                     requested_length = 5
@@ -346,14 +348,14 @@ async def on_message(message):
                     em.add_field(name='{} ({})'.format(game['name'], game['appid']),
                                  value='{}\n플레이: steam://run/{}/'.format(playtime, game['appid']), inline=False)
                     i += 1
-                await app.send_message(message.channel, embed=em)
+                await message.channel.send(embed=em)
         elif msg[1] == 'wishlist':
             if len(msg) == 1:
-                await app.send_message(message.channel, ":x: 명령어를 제대로 입력해주세요!.")
+                await message.channel.send(":x: 명령어를 제대로 입력해주세요!.")
             else:
                 steamid = get_steam_id(msg[2])
                 if steamid == 0:
-                    await app.send_message(message.channel, ":x: 유효한 스팀 아이디를 사용해주세요.")
+                    await message.channel.send(":x: 유효한 스팀 아이디를 사용해주세요.")
                     return
                 userwish = requests.get(
                     'https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/'.format(steamid))
@@ -362,7 +364,7 @@ async def on_message(message):
                     try:
                         requested_length = int(msg[3])
                     except ValueError:
-                        await app.send_message(message.channel, ":x: 게임 갯수는 정수를 사용해주세요.")
+                        await message.channel.send(":x: 게임 갯수는 정수를 사용해주세요.")
                         return
                 else:
                     requested_length = 20
@@ -389,14 +391,14 @@ async def on_message(message):
                                    description=output, inline=False,
                                    colour=discord.Colour(0x1b2838))
 
-                await app.send_message(message.channel, embed=em)
+                await message.channel.send(embed=em)
         elif msg[1] == "profile":
             if len(msg) < 3:
-                await app.send_message(message.channel, ":x: 스팀 아이디를 입력해주세요!.")
+                await message.channel.send(":x: 스팀 아이디를 입력해주세요!.")
                 return
             xmls = get_steam_id(msg[2], True)
             if xmls == 0:
-                await app.send_message(message.channel, ":x: 유효한 스팀 아이디를 사용해주세요.")
+                await message.channel.send(":x: 유효한 스팀 아이디를 사용해주세요.")
                 return
             if xmls.find('onlineState').text == 'in-game':
                 statusColor = discord.Colour(0x90ba3c)
@@ -408,7 +410,7 @@ async def on_message(message):
                                description=xmls.find('stateMessage').text.replace('<br/>', ': '),
                                colour=statusColor).set_thumbnail(url=xmls.find('avatarIcon').text)
             em.add_field(name='요약', value=xmls.find('summary').text.replace('<br>', '\n'), inline=False)
-            await app.send_message(message.channel, embed=em)
+            await message.channel.send(embed=em)
 
 
 def isNumber(s):
@@ -437,8 +439,8 @@ async def realtime():
         for realtimeText in realtimeQueue:
             recentRealtime += realtimeText + '\n'
         for channel in realtimeList:
-            await app.send_message(app.get_channel(channel.id), recentRealtime)
+            await client.get_channel(channel.id).send(recentRealtime)
         realtimeQueue.clear()
 
 
-app.run(token)
+client.run(token)
