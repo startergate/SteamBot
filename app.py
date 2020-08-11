@@ -8,9 +8,11 @@ import discord
 from dotenv import load_dotenv
 from markdownify import markdownify as md
 
-from modules.help import Help
+
 from modules.liveupdate import *
-from modules.steamapi import *
+
+from utils.help import Help
+from utils.steamapi import *
 
 load_dotenv()
 
