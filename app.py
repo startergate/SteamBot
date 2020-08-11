@@ -8,7 +8,7 @@ import discord
 from dotenv import load_dotenv
 from markdownify import markdownify as md
 
-
+import data.urls as urls
 from modules.liveupdate import *
 
 from utils.help import Help
@@ -24,7 +24,6 @@ steam_api_key = os.getenv('steam_api_key')
 invite = os.getenv('invite')
 
 loop = asyncio.get_event_loop()
-
 
 
 @client.event
@@ -67,8 +66,7 @@ async def on_message(message: discord.Message):
                 return
 
             query = message.content.replace('st!game search ', '')
-            src = requests.get(
-                'https://store.steampowered.com/search/?term={}'.format(query.lower().replace(' ', '+'))).text
+            src = requests.get(urls.STEAM_SEARCH.format(query.lower().replace(' ', '+'))).text
             src = BeautifulSoup(src, 'html.parser')
             games = src.find_all('a', class_='search_result_row')
             if not games:
@@ -89,7 +87,7 @@ async def on_message(message: discord.Message):
             await message.channel.send(embed=em)
         elif msg[1] == 'bestseller':
             if len(msg) == 2:
-                bestseller_src = requests.get('https://store.steampowered.com/search/?filter=topsellers')
+                bestseller_src = requests.get(urls.STEAM_BESTSELLER)
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
                 bst_seller = bestseller_src.find_all('a', class_='search_result_row')
 
@@ -104,7 +102,7 @@ async def on_message(message: discord.Message):
                 em = discord.Embed(title='스팀 최고 판매 제품', description=output_text, colour=discord.Colour(0x1b2838))
                 await message.channel.send(embed=em)
             elif msg[2] == 'new':
-                bestseller_src = requests.get('https://store.steampowered.com/explore/new/')
+                bestseller_src = requests.get(urls.STEAM_BESTSELLER_NEW)
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
                 bst_seller = bestseller_src.find('div', id='tab_newreleases_content')
                 bst_seller = bst_seller.find_all('a', class_='tab_item')
@@ -124,8 +122,8 @@ async def on_message(message: discord.Message):
 
                 em = discord.Embed(title='스팀 최고 판매 제품', description=output_text, colour=discord.Colour(0x1b2838))
                 await message.channel.send(embed=em)
-            elif msg[2] == 'oncoming':
-                bestseller_src = requests.get('https://store.steampowered.com/explore/upcoming/')
+            elif msg[2] == 'upcoming':
+                bestseller_src = requests.get(urls.STEAM_UPCOMING_GAME)
                 bestseller_src = BeautifulSoup(bestseller_src.text, 'html.parser')
                 bst_seller = bestseller_src.find('div', id='tab_popular_comingsoon_content')
                 bst_seller = bst_seller.find_all('a', class_='tab_item')
@@ -148,7 +146,7 @@ async def on_message(message: discord.Message):
                 em = discord.Embed(title='스팀 최고 인기 출시 예정 제품', description=output_text, colour=discord.Colour(0x1b2838))
                 await message.channel.send(embed=em)
         elif msg[1] == 'new':
-            new_src = requests.get('https://store.steampowered.com/search/?sort_by=Released_DESC')
+            new_src = requests.get(urls.STEAM_NEW_GAME)
             new_src = BeautifulSoup(new_src.text, 'html.parser')
             new_prd = new_src.find_all('a', class_='search_result_row')
 
@@ -166,7 +164,7 @@ async def on_message(message: discord.Message):
             em = discord.Embed(title='스팀 최신 출시 제품', description=output_text, colour=discord.Colour(0x1b2838))
             await message.channel.send(embed=em)
         elif msg[1] == 'specials':
-            new_src = requests.get('https://store.steampowered.com/search/?specials=1')
+            new_src = requests.get(urls.STEAM_SPECIALS)
             new_src = BeautifulSoup(new_src.text, 'html.parser')
             new_prd = new_src.find_all('a', class_='search_result_row')
 
@@ -193,7 +191,7 @@ async def on_message(message: discord.Message):
             else:
                 requested_length = 10
 
-            hot_src = requests.get('https://store.steampowered.com/stats/?l=koreana')
+            hot_src = requests.get(urls.STEAM_HOT_GAME)
             hot_src = BeautifulSoup(hot_src.text, 'html.parser')
             hot_prd = hot_src.find_all('tr', class_='player_count_row')
             if len(hot_prd) < requested_length:
@@ -231,7 +229,7 @@ async def on_message(message: discord.Message):
                 await message.channel.send(":white_check_mark: 로딩 중 입니다.")
                 keys = list(id.keys())
                 news_src = requests.get(
-                    'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={}&count={}&maxlength=300&format=json'.format(
+                    urls.STEAM_GAME_NEWS.format(
                         keys[0], requested_length))
                 news_src = news_src.json()
 
@@ -276,7 +274,7 @@ async def on_message(message: discord.Message):
                     await message.channel.send(":x: 유효한 스팀 아이디를 사용해주세요.")
                     return
                 recents = requests.get(
-                    'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={}&steamid={}&format=json'.format(steam_api_key, steamid))
+                    urls.STEAM_RECENT_PLAYED.format(steam_api_key, steamid))
                 recents = recents.json()
                 if recents['response']['total_count'] == 0:
                     await message.channel.send(
@@ -310,8 +308,7 @@ async def on_message(message: discord.Message):
                     await message.channel.send(":x: 유효한 스팀 아이디를 사용해주세요.")
                     return
                 userlib = requests.get(
-                    'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=B6137C92F67299965B5E6BF287ECA4AE&steamid={}&include_appinfo=1&format=json'.format(
-                        steamid))
+                    urls.STEAM_LIBRARY.format(steam_api_key, steamid))
                 userlib = userlib.json()
                 games = userlib['response']['games']
                 games = sorted(games, key=lambda game: game['playtime_forever'], reverse=True)
@@ -359,9 +356,8 @@ async def on_message(message: discord.Message):
                 if steamid == 0:
                     await message.channel.send(":x: 유효한 스팀 아이디를 사용해주세요.")
                     return
-                userwish = requests.get(
-                    'https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/'.format(steamid))
-                userwish = userwish.json()
+                wishlist = requests.get(urls.STEAM_WISHLIST.format(steamid))
+                wishlist = wishlist.json()
                 if len(msg) > 3:
                     try:
                         requested_length = int(msg[3])
@@ -370,23 +366,23 @@ async def on_message(message: discord.Message):
                         return
                 else:
                     requested_length = 20
-                if len(userwish) < requested_length:
-                    requested_length = len(userwish)
+                if len(wishlist) < requested_length:
+                    requested_length = len(wishlist)
                 if requested_length > 50:
                     requested_length = 50
-                sortedNumbers = sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish][
+                sortedNumbers = sorted(wishlist, key=lambda wish: wishlist[wish]['priority'] if wishlist[wish][
                                                                                                     'priority'] != 0 else requested_length + 1)
-                sortedNumbers += sorted(userwish, key=lambda wish: userwish[wish]['priority'] if userwish[wish][
+                sortedNumbers += sorted(wishlist, key=lambda wish: wishlist[wish]['priority'] if wishlist[wish][
                                                                                                      'priority'] == 0 else requested_length + 1)
                 i = 0
                 output = '찜 목록에 있는 게임 {}개를 불러왔어요.\n'.format(requested_length)
                 for num in sortedNumbers:
                     if i == requested_length:
                         break
-                    output += '{} ({})'.format(userwish[num]['name'], num)
-                    if userwish[num].get('subs', False):
-                        if userwish[num]['subs'][0].get('price', False):
-                            output += ' - ₩ {:,}'.format(int(userwish[num]['subs'][0]['price']) // 100)
+                    output += '{} ({})'.format(wishlist[num]['name'], num)
+                    if wishlist[num].get('subs', False):
+                        if wishlist[num]['subs'][0].get('price', False):
+                            output += ' - ₩ {:,}'.format(int(wishlist[num]['subs'][0]['price']) // 100)
                     output += '\n'
                     i += 1
                 em = discord.Embed(title='{} 님의 찜 목록이에요.'.format(msg[2]),
