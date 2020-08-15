@@ -23,6 +23,8 @@ def get_game_id(name):
     src = BeautifulSoup(src, 'html.parser')
     try:
         target = src.find_all('a', class_='search_result_row')[0]
+        game_id = target['href'].replace('https://store.steampowered.com/app/', '').split('/')[0]
+        title = target.find('span', class_='title').text
+        return {game_id: title}
     except IndexError:
         return {}
-    return {target['href'].replace('https://store.steampowered.com/app/', '').split('/')[0]: target.find('span', class_='title').text}
