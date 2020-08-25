@@ -65,7 +65,7 @@ async def on_message(message: discord.Message):
                 await message.channel.send(":x: 검색어를 입력해주세요!.")
                 return
 
-            query = message.content.replace('st!game search ', '')
+            query = message.content.replace('game search ', '')
             src = requests.get(urls.STEAM_SEARCH.format(query.lower().replace(' ', '+'))).text
             src = BeautifulSoup(src, 'html.parser')
             games = src.find_all('a', class_='search_result_row')
