@@ -14,11 +14,11 @@ markdownify==0.5.2
 multidict==4.7.6
 pycparser==2.20
 python-dotenv==0.14.0
-requests==2.23.0
+requests==2.24.0
 six==1.15.0
 soupsieve==2.0.1
 urllib3==1.25.10
-websocket-client-py3==0.15.0
+websocket_client==0.57.0
 websockets==8.1
 yarl==1.5.1
 zope.event==4.4

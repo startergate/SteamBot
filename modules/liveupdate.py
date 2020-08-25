@@ -9,23 +9,17 @@ isRealtimeAlive = False
 
 def on_message_live(ws, message):
     message = json.loads(message)
-    if message["Type"] == 'UsersOnline':
-        return
-    if message["Type"] == 'LogOff':
-        return
-    if message["Type"] == 'LogOn':
+    if message["Type"] in ['UsersOnline', 'LogOff', 'LogOn']:
         return
     if len(list(message['Apps'].keys())) < 1:
         return
     game_id = list(message['Apps'].keys())[0]
     message_str = "{} #{} - Apps: {} ({})".format(message['Type'], message['ChangeNumber'], message['Apps'][game_id],
-                                                 game_id)
+                                                  game_id)
     if message['Packages'] != {}:
-        packageid = list(message['Packages'].keys())[0]
-        message_str += ' - Packages: {} ({})'.format(message['Packages'][packageid], packageid)
-    print(message_str)
+        package_id = list(message['Packages'].keys())[0]
+        message_str += ' - Packages: {} ({})'.format(message['Packages'][package_id], package_id)
     realtimeQueue.append(message_str)
-    print(realtimeQueue)
 
 
 def on_error_live(ws, error):
